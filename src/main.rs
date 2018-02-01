@@ -27,21 +27,21 @@ fn main() {
         println!("checking: {}", &name_string.display());
         match Command::new("ldd").arg(&name_string).output() {
             Ok(out) => {
-            //    println!("git gc error\nstatus: {}", out.status);
-            //    println!("stdout:\n {}", String::from_utf8_lossy(&out.stdout));
-            //    println!("stderr:\n {}", String::from_utf8_lossy(&out.stderr));
+                //    println!("git gc error\nstatus: {}", out.status);
+                //    println!("stdout:\n {}", String::from_utf8_lossy(&out.stdout));
+                //    println!("stderr:\n {}", String::from_utf8_lossy(&out.stderr));
                 //if out.status.success() {}
                 let output = String::from_utf8_lossy(&out.stdout);
                 let output = output.into_owned();
                 let mut first = true;
                 for line in output.lines() {
-                    if line.ends_with("=> not found")  {
-                            if first {
-                                println!("binary: {}", name_string.display());
-                            }
-                            println!("is missing: {}",  line);
-                            first = false;
-                     }
+                    if line.ends_with("=> not found") {
+                        if first {
+                            println!("binary: {}", name_string.display());
+                        }
+                        println!("is missing: {}", line);
+                        first = false;
+                    }
                     //println!("{}", line);
                 }
             }
