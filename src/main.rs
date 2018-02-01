@@ -39,7 +39,7 @@ fn main() {
                         if first {
                             println!("binary: {}", name_string.display());
                         }
-                        println!("is missing: {}", line);
+                        println!("\t\t is missing: {}", line.replace("=> not found", "").trim());
                         first = false;
                     }
                     //println!("{}", line);
