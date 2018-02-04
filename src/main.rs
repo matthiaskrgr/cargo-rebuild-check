@@ -12,9 +12,11 @@
 //#![cfg_attr(feature = "cargo-clippy", warn(result_unwrap_used))]
 
 extern crate cargo;
+extern crate rayon;
 
 use std::fs::*;
 use std::process::Command;
+use rayon::prelude::*;
 
 fn check_file(path: &DirEntry) {
     let mut print_string = String::new();
@@ -52,8 +54,11 @@ fn main() {
     let cargo_cfg = cargo::util::config::Config::default().unwrap();
     let mut bin_dir = cargo_cfg.home().clone().into_path_unlocked();
     bin_dir.push("bin");
-    // check all files in this dir
-    for binary in read_dir(&bin_dir).unwrap() {
-        check_file(&binary.unwrap());
+
+    let mut files = Vec::new();
+    for file in read_dir(&bin_dir).unwrap() {
+        files.push(file.unwrap());
     }
+
+    files.par_iter().for_each(|binary| { check_file(binary) });
 }
