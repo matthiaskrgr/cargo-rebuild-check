@@ -37,7 +37,10 @@ fn check_file(path: &DirEntry) {
                     if first {
                         print_string.push_str(&format!("\nbinary: {}\n", &name_string.display()));
                     }
-                    print_string.push_str(&format!("\t\t is missing: {}\n", line.replace("=> not found", "").trim()));
+                    print_string.push_str(&format!(
+                        "\t\t is missing: {}\n",
+                        line.replace("=> not found", "").trim()
+                    ));
                     first = false;
                 }
                 //println!("{}", line);
@@ -60,5 +63,5 @@ fn main() {
         files.push(file.unwrap());
     }
 
-    files.par_iter().for_each(|binary| { check_file(binary) });
+    files.par_iter().for_each(|binary| check_file(binary));
 }
