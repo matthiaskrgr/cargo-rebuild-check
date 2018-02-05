@@ -46,7 +46,7 @@ fn check_file(path: &DirEntry) {
         Err(e) => panic!("ERROR '{}'", e),
     }
     if print_string.len() > 1 {
-        println!("{}", print_string);
+        println!("{}", print_string.trim());
     }
 }
 
