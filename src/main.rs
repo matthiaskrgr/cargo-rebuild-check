@@ -17,9 +17,19 @@ extern crate rayon;
 use std::fs::*;
 use std::process::Command;
 use rayon::prelude::*;
-use std::env;
 use std::fs::File;
 use std::io::prelude::*;
+
+// deserialize the ~/.cargo/.crates.toml
+
+#[derive(Debug)]
+struct Package {
+    //metadata: String,
+    name: String,
+    version: String,
+    source: String,
+    binaries: Vec<String>,
+}
 
 fn check_file(path: &DirEntry) {
     let mut print_string = String::new();
@@ -69,16 +79,35 @@ fn main() {
         files.push(file.unwrap());
     }
 
-    println!("crates index: {:?}", crates_index);
-
     let mut f = File::open(crates_index.into_path_unlocked()).expect("file not found");
 
     let mut file_content = String::new();
     f.read_to_string(&mut file_content)
         .expect(&format!("Error: could not read '{}'", file_content));
 
-    println!("{}", file_content);
-    std::process::exit(1);
+    let mut file_iter = file_content.lines().into_iter();
+    let first_line = file_iter.next();
+    assert_eq!(first_line.unwrap(), "[v1]", "api changed!");
+
+    let mut packages = Vec::new();
+
+    for line in file_iter {
+        let line_split: Vec<&str> = line.split(' ').collect();
+        let name = line_split[0].to_string();
+        let version = line_split[1].to_string();
+        let source = line_split[2].to_string();
+        let mut binaries = Vec::new();
+        for bin in line_split[4..].iter() {
+            binaries.push(bin.to_string());
+        }
+        let package = Package {
+            name,
+            version,
+            source,
+            binaries,
+        };
+        packages.push(package);
+    }
 
     files.par_iter().for_each(|binary| check_file(binary));
 }
