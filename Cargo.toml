@@ -5,5 +5,5 @@ authors = ["Matthias Krüger <matthias.krueger@famsik.de>"]
 
 [dependencies]
 # https://github.com/rust/cargo
-cargo = "0.24" # get CARGO_HOME
+cargo = "0.25" # get CARGO_HOME
 rayon = "0.9" # parallelize
