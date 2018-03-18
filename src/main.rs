@@ -17,6 +17,9 @@ extern crate rayon;
 use std::fs::*;
 use std::process::Command;
 use rayon::prelude::*;
+use std::env;
+use std::fs::File;
+use std::io::prelude::*;
 
 fn check_file(path: &DirEntry) {
     let mut print_string = String::new();
@@ -58,10 +61,24 @@ fn main() {
     let mut bin_dir = cargo_cfg.home().clone().into_path_unlocked();
     bin_dir.push("bin");
 
+    let mut crates_index = cargo_cfg.home().clone();
+    crates_index.push(".crates.toml");
+
     let mut files = Vec::new();
     for file in read_dir(&bin_dir).unwrap() {
         files.push(file.unwrap());
     }
+
+    println!("crates index: {:?}", crates_index);
+
+    let mut f = File::open(crates_index.into_path_unlocked()).expect("file not found");
+
+    let mut file_content = String::new();
+    f.read_to_string(&mut file_content)
+        .expect(&format!("Error: could not read '{}'", file_content));
+
+    println!("{}", file_content);
+    std::process::exit(1);
 
     files.par_iter().for_each(|binary| check_file(binary));
 }
