@@ -29,14 +29,18 @@ struct Package {
     binaries: Vec<String>,
 }
 
-fn check_binary(package: &Package, bin_dir: &std::path::PathBuf) {
+fn check_binary(package: &Package, bin_dir: &std::path::PathBuf, rust_lib_path: &str) {
     let mut print_string = format!("checking: {} {}", package.name, package.version).to_string();
 
     for binary in &package.binaries {
         let mut bin_path: std::path::PathBuf = bin_dir.clone();
         bin_path.push(&binary);
         let binary_path = bin_path.into_os_string().into_string().unwrap();
-        match Command::new("ldd").arg(&binary_path).output() {
+        match Command::new("ldd")
+            .arg(&binary_path)
+            .env("LD_LIBRARY_PATH", rust_lib_path)
+            .output()
+        {
             Ok(out) => {
                 let output = String::from_utf8_lossy(&out.stdout).into_owned();
                 let mut first = true;
@@ -115,8 +119,26 @@ fn main() {
         packages.push(package);
     }
 
+    // get the path where rustc libs are stored: $(rustc --print sysroot)/lib
+    let rust_lib_path = match Command::new("rustc").arg("--print").arg("sysroot").output() {
+        Ok(out) => {
+            let mut output = String::from_utf8_lossy(&out.stdout).into_owned();
+            // remove \n
+            output.pop();
+            let mut path = std::path::PathBuf::from(output);
+            path.push("lib");
+            path
+        }
+        Err(e) => panic!("Error getting rustc sysroot path '{}'", e),
+    };
+
+    let rust_lib_path_string = rust_lib_path
+        .into_os_string()
+        .into_string()
+        .expect("Failed to convert pathBuf to String");
+
     // iterate (in parallel) over the acquired metadata and check for broken library links
     packages
         .par_iter()
-        .for_each(|binary| check_binary(binary, &bin_dir));
+        .for_each(|binary| check_binary(binary, &bin_dir, &rust_lib_path_string));
 }
