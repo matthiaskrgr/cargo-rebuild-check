@@ -14,7 +14,6 @@
 extern crate cargo;
 extern crate rayon;
 
-use std::fs::*;
 use std::process::Command;
 use rayon::prelude::*;
 use std::fs::File;
@@ -30,7 +29,7 @@ struct Package {
     binaries: Vec<String>,
 }
 
-fn check_file(package: &Package, bin_dir: &std::path::PathBuf) {
+fn check_binary(package: &Package, bin_dir: &std::path::PathBuf) {
     let mut print_string = String::new();
     print_string.push_str(&format!("checking: {} {}", package.name, package.version));
 
@@ -54,7 +53,6 @@ fn check_file(package: &Package, bin_dir: &std::path::PathBuf) {
                         ));
                         first = false;
                     }
-                    //println!("{}", line);
                 }
             }
             Err(e) => panic!("ERROR '{}'", e),
@@ -73,11 +71,6 @@ fn main() {
     let mut crates_index = cargo_cfg.home().clone();
     crates_index.push(".crates.toml");
 
-    let mut files = Vec::new();
-    for file in read_dir(&bin_dir).unwrap() {
-        files.push(file.unwrap());
-    }
-
     let mut f = File::open(crates_index.into_path_unlocked()).expect("file not found");
 
     let mut file_content = String::new();
@@ -85,8 +78,9 @@ fn main() {
         .expect(&format!("Error: could not read '{}'", file_content));
 
     let mut file_iter = file_content.lines().into_iter();
-    let first_line = file_iter.next();
-    assert_eq!(first_line.unwrap(), "[v1]", "Error: Api changed!");
+    // skip the first line when unwrapping
+    // the first line also tells the api version, so assert that we are sort of compatible
+    assert_eq!(file_iter.next().unwrap(), "[v1]", "Error: Api changed!");
 
     let mut packages = Vec::new();
 
@@ -98,6 +92,10 @@ fn main() {
         let mut binaries = Vec::new();
 
         // collect the binaries a crate has installed
+
+        // the line looks like this:
+        // "rustfmt-nightly 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)" = ["cargo-fmt", "git-rustfmt", "rustfmt", "rustfmt-format-diff"]
+        // split at the "=" and get everything after it
         let bins_split_from_line: Vec<&str> = line.split('=').collect();
         let bins = bins_split_from_line.last().unwrap();
         for bin in bins.split(',') {
@@ -116,11 +114,12 @@ fn main() {
             source,
             binaries,
         };
+        // collect the packages
         packages.push(package);
     }
 
-    // iterate over the acquired metadata and check for broken library links
+    // iterate (in parallel) over the acquired metadata and check for broken library links
     packages
         .par_iter()
-        .for_each(|binary| check_file(binary, &bin_dir));
+        .for_each(|binary| check_binary(binary, &bin_dir));
 }
