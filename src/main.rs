@@ -50,10 +50,10 @@ fn check_file(package: &Package, bin_dir: &std::path::PathBuf) {
                 for line in output.lines() {
                     if line.ends_with("=> not found") {
                         if first {
-                            print_string.push_str(&format!("\nbinary: {}\n", &binary));
+                            print_string.push_str(&format!("\nbinary: '{}' is missing\n", &binary));
                         }
                         print_string.push_str(&format!(
-                            "\t\t is missing: {}\n",
+                            "\t\t{}\n",
                             line.replace("=> not found", "").trim()
                         ));
                         first = false;
