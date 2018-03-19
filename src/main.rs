@@ -100,7 +100,7 @@ fn main() {
         // collect the binaries a crate has installed
         let bins_split_from_line: Vec<&str> = line.split('=').collect();
         let bins = bins_split_from_line.last().unwrap();
-        for bin in bins.split(",") {
+        for bin in bins.split(',') {
             // clean up, remove characters remaining from toml encoding
             let binary: String = bin.replace("[", "")
                 .replace("]", "")
