@@ -40,10 +40,6 @@ fn check_file(package: &Package, bin_dir: &std::path::PathBuf) {
         let binary_path = bin_path.into_os_string().into_string().unwrap();
         match Command::new("ldd").arg(&binary_path).output() {
             Ok(out) => {
-                //    println!("git gc error\nstatus: {}", out.status);
-                //    println!("stdout:\n {}", String::from_utf8_lossy(&out.stdout));
-                //    println!("stderr:\n {}", String::from_utf8_lossy(&out.stderr));
-                //if out.status.success() {}
                 let output = String::from_utf8_lossy(&out.stdout);
                 let output = output.into_owned();
                 let mut first = true;
