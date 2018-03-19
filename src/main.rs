@@ -24,42 +24,45 @@ use std::io::prelude::*;
 
 #[derive(Debug)]
 struct Package {
-    //metadata: String,
     name: String,
     version: String,
     source: String,
     binaries: Vec<String>,
 }
 
-fn check_file(path: &DirEntry) {
+fn check_file(package: &Package, bin_dir: &std::path::PathBuf) {
     let mut print_string = String::new();
-    let name_string = path.path();
-    print_string.push_str(&format!("checking: {}", &name_string.display()));
+    print_string.push_str(&format!("checking: {} {}", package.name, package.version));
 
-    match Command::new("ldd").arg(&name_string).output() {
-        Ok(out) => {
-            //    println!("git gc error\nstatus: {}", out.status);
-            //    println!("stdout:\n {}", String::from_utf8_lossy(&out.stdout));
-            //    println!("stderr:\n {}", String::from_utf8_lossy(&out.stderr));
-            //if out.status.success() {}
-            let output = String::from_utf8_lossy(&out.stdout);
-            let output = output.into_owned();
-            let mut first = true;
-            for line in output.lines() {
-                if line.ends_with("=> not found") {
-                    if first {
-                        print_string.push_str(&format!("\nbinary: {}\n", &name_string.display()));
+    for binary in &package.binaries {
+        let mut bin_path: std::path::PathBuf = bin_dir.clone();
+        bin_path.push(&binary);
+        let binary_path = bin_path.into_os_string().into_string().unwrap();
+        match Command::new("ldd").arg(&binary_path).output() {
+            Ok(out) => {
+                //    println!("git gc error\nstatus: {}", out.status);
+                //    println!("stdout:\n {}", String::from_utf8_lossy(&out.stdout));
+                //    println!("stderr:\n {}", String::from_utf8_lossy(&out.stderr));
+                //if out.status.success() {}
+                let output = String::from_utf8_lossy(&out.stdout);
+                let output = output.into_owned();
+                let mut first = true;
+                for line in output.lines() {
+                    if line.ends_with("=> not found") {
+                        if first {
+                            print_string.push_str(&format!("\nbinary: {}\n", &binary));
+                        }
+                        print_string.push_str(&format!(
+                            "\t\t is missing: {}\n",
+                            line.replace("=> not found", "").trim()
+                        ));
+                        first = false;
                     }
-                    print_string.push_str(&format!(
-                        "\t\t is missing: {}\n",
-                        line.replace("=> not found", "").trim()
-                    ));
-                    first = false;
+                    //println!("{}", line);
                 }
-                //println!("{}", line);
             }
+            Err(e) => panic!("ERROR '{}'", e),
         }
-        Err(e) => panic!("ERROR '{}'", e),
     }
     if print_string.len() > 1 {
         println!("{}", print_string.trim());
@@ -87,19 +90,29 @@ fn main() {
 
     let mut file_iter = file_content.lines().into_iter();
     let first_line = file_iter.next();
-    assert_eq!(first_line.unwrap(), "[v1]", "api changed!");
+    assert_eq!(first_line.unwrap(), "[v1]", "Error: Api changed!");
 
     let mut packages = Vec::new();
 
     for line in file_iter {
         let line_split: Vec<&str> = line.split(' ').collect();
-        let name = line_split[0].to_string();
+        let name = line_split[0].to_string().replace("\"", "");
         let version = line_split[1].to_string();
         let source = line_split[2].to_string();
         let mut binaries = Vec::new();
-        for bin in line_split[4..].iter() {
-            binaries.push(bin.to_string());
+
+        // collect the binaries a crate has installed
+        let bins_split: Vec<&str> = line.split('=').collect();
+        for bin in bins_split {
+            // clean up, remove characters remaining from toml encoding
+            let binary: String = bin.replace("[", "")
+                .replace("]", "")
+                .replace("\"", "")
+                .trim()
+                .to_string();
+            binaries.push(binary);
         }
+
         let package = Package {
             name,
             version,
@@ -109,5 +122,8 @@ fn main() {
         packages.push(package);
     }
 
-    files.par_iter().for_each(|binary| check_file(binary));
+    // iterate over the acquired metadata and check for broken library links
+    packages
+        .par_iter()
+        .for_each(|binary| check_file(binary, &bin_dir));
 }
