@@ -30,8 +30,7 @@ struct Package {
 }
 
 fn check_binary(package: &Package, bin_dir: &std::path::PathBuf) {
-    let mut print_string = String::new();
-    print_string.push_str(&format!("checking: {} {}", package.name, package.version));
+    let mut print_string = format!("checking: {} {}", package.name, package.version).to_string();
 
     for binary in &package.binaries {
         let mut bin_path: std::path::PathBuf = bin_dir.clone();
@@ -39,8 +38,7 @@ fn check_binary(package: &Package, bin_dir: &std::path::PathBuf) {
         let binary_path = bin_path.into_os_string().into_string().unwrap();
         match Command::new("ldd").arg(&binary_path).output() {
             Ok(out) => {
-                let output = String::from_utf8_lossy(&out.stdout);
-                let output = output.into_owned();
+                let output = String::from_utf8_lossy(&out.stdout).into_owned();
                 let mut first = true;
                 for line in output.lines() {
                     if line.ends_with("=> not found") {
@@ -55,12 +53,11 @@ fn check_binary(package: &Package, bin_dir: &std::path::PathBuf) {
                     }
                 }
             }
-            Err(e) => panic!("ERROR '{}'", e),
-        }
-    }
-    if print_string.len() > 1 {
-        println!("{}", print_string.trim());
-    }
+            Err(e) => panic!("Error while runnning ldd: '{}'", e),
+        } // match
+    } // for binary in &package.binaries
+
+    println!("{}", print_string.trim());
 }
 
 fn main() {
