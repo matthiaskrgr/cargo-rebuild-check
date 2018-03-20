@@ -29,10 +29,15 @@ struct Package {
     binaries: Vec<String>,
 }
 
-fn check_binary(package: &Package, bin_dir: &std::path::PathBuf, rust_lib_path: &str) {
+fn check_binary(
+    package: &Package,
+    bin_dir: &std::path::PathBuf,
+    rust_lib_path: &str,
+) -> Option<String> {
     let mut print_string =
         format!("  Checking crate {} {}", package.name, package.version).to_string();
 
+    let mut outdated_package: Option<String> = None;
     for binary in &package.binaries {
         let mut bin_path: std::path::PathBuf = bin_dir.clone();
         bin_path.push(&binary);
@@ -48,6 +53,8 @@ fn check_binary(package: &Package, bin_dir: &std::path::PathBuf, rust_lib_path: 
                 for line in output.lines() {
                     if line.ends_with("=> not found") {
                         if first {
+                            // package needs rebuild
+                            outdated_package = Some(package.name.clone());
                             print_string
                                 .push_str(&format!("\n    Binary '{}' is missing:\n", &binary));
                         }
@@ -64,6 +71,7 @@ fn check_binary(package: &Package, bin_dir: &std::path::PathBuf, rust_lib_path: 
     } // for binary in &package.binaries
 
     println!("{}", print_string);
+    outdated_package
 }
 
 fn main() {
@@ -140,7 +148,18 @@ fn main() {
         .expect("Failed to convert pathBuf to String");
 
     // iterate (in parallel) over the acquired metadata and check for broken library links
-    packages
+    let broken_pkgs: Vec<Option<String>> = packages
         .par_iter()
-        .for_each(|binary| check_binary(binary, &bin_dir, &rust_lib_path_string));
+        .map(|binary| check_binary(binary, &bin_dir, &rust_lib_path_string))
+        .collect();
+    // filter out all Some(String) packages
+    // todo: use iterator
+    let mut ok_packages: Vec<String> = Vec::new();
+    for pkg in broken_pkgs {
+        if let Some(p) = pkg {
+            ok_packages.push(p);
+        }
+    }
+
+    println!("\n  Crates needing rebuild: {}", ok_packages.join(" "));
 }
