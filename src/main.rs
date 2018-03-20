@@ -157,5 +157,8 @@ fn main() {
     // don't print anything if all packages are ok
     if !broken_pkgs.is_empty() {
         println!("\n  Crates needing rebuild: {}", broken_pkgs.join(" "));
+        std::process::exit(2);
+    } else {
+        println!("\n  Everything looks good.");
     }
 }
