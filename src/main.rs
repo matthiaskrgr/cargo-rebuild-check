@@ -148,20 +148,14 @@ fn main() {
         .expect("Failed to convert pathBuf to String");
 
     // iterate (in parallel) over the acquired metadata and check for broken library links
-    let broken_pkgs: Vec<Option<String>> = packages
+    // filter out all None values, only collect the Some() ones
+    let broken_pkgs: Vec<String> = packages
         .par_iter()
-        .map(|binary| check_binary(binary, &bin_dir, &rust_lib_path_string))
+        .filter_map(|binary| check_binary(binary, &bin_dir, &rust_lib_path_string))
         .collect();
-    if !broken_pkgs.is_empty() {
-        // filter out all Some(String) packages
-        // todo: use iterator
-        let mut ok_packages: Vec<String> = Vec::new();
-        for pkg in broken_pkgs {
-            if let Some(p) = pkg {
-                ok_packages.push(p);
-            }
-        }
 
-        println!("\n  Crates needing rebuild: {}", ok_packages.join(" "));
+    // don't print anything if all packages are ok
+    if !broken_pkgs.is_empty() {
+        println!("\n  Crates needing rebuild: {}", broken_pkgs.join(" "));
     }
 }
