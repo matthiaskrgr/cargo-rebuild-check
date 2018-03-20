@@ -66,7 +66,7 @@ fn check_binary(
                     }
                 }
             }
-            Err(e) => panic!("Error while runnning ldd: '{}'", e),
+            Err(e) => eprintln!("Error while runnning ldd: '{}'", e),
         } // match
     } // for binary in &package.binaries
 
@@ -75,6 +75,24 @@ fn check_binary(
 }
 
 fn main() {
+    // make sure "ldd" is available
+
+    match Command::new("whereis").arg("ldd").output() {
+        Ok(out) => {
+            let stdout = String::from_utf8_lossy(&out.stdout).into_owned();
+            if stdout.matches(' ').count() < 1 {
+                // assume space seperated words
+                eprintln!("Error: failed to find ldd");
+                std::process::exit(3);
+            }
+        }
+
+        Err(e) => {
+            eprintln!("Error: \"whereis ldd\" failed: '{}'", e);
+            std::process::exit(3);
+        }
+    };
+
     let cargo_cfg = cargo::util::config::Config::default().unwrap();
     let mut bin_dir = cargo_cfg.home().clone().into_path_unlocked();
     bin_dir.push("bin");
