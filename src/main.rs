@@ -152,14 +152,16 @@ fn main() {
         .par_iter()
         .map(|binary| check_binary(binary, &bin_dir, &rust_lib_path_string))
         .collect();
-    // filter out all Some(String) packages
-    // todo: use iterator
-    let mut ok_packages: Vec<String> = Vec::new();
-    for pkg in broken_pkgs {
-        if let Some(p) = pkg {
-            ok_packages.push(p);
+    if !broken_pkgs.is_empty() {
+        // filter out all Some(String) packages
+        // todo: use iterator
+        let mut ok_packages: Vec<String> = Vec::new();
+        for pkg in broken_pkgs {
+            if let Some(p) = pkg {
+                ok_packages.push(p);
+            }
         }
-    }
 
-    println!("\n  Crates needing rebuild: {}", ok_packages.join(" "));
+        println!("\n  Crates needing rebuild: {}", ok_packages.join(" "));
+    }
 }
