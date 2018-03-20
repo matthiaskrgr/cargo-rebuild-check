@@ -154,7 +154,6 @@ fn main() {
         .filter_map(|binary| check_binary(binary, &bin_dir, &rust_lib_path_string))
         .collect();
 
-    // don't print anything if all packages are ok
     if !broken_pkgs.is_empty() {
         println!("\n  Crates needing rebuild: {}", broken_pkgs.join(" "));
         std::process::exit(2);
