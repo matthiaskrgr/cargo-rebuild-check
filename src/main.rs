@@ -30,7 +30,8 @@ struct Package {
 }
 
 fn check_binary(package: &Package, bin_dir: &std::path::PathBuf, rust_lib_path: &str) {
-    let mut print_string = format!("checking: {} {}", package.name, package.version).to_string();
+    let mut print_string =
+        format!("  Checking crate {} {}", package.name, package.version).to_string();
 
     for binary in &package.binaries {
         let mut bin_path: std::path::PathBuf = bin_dir.clone();
@@ -47,7 +48,8 @@ fn check_binary(package: &Package, bin_dir: &std::path::PathBuf, rust_lib_path: 
                 for line in output.lines() {
                     if line.ends_with("=> not found") {
                         if first {
-                            print_string.push_str(&format!("\nbinary: '{}' is missing\n", &binary));
+                            print_string
+                                .push_str(&format!("\n    Binary '{}' is missing:\n", &binary));
                         }
                         print_string.push_str(&format!(
                             "\t\t{}\n",
@@ -61,7 +63,7 @@ fn check_binary(package: &Package, bin_dir: &std::path::PathBuf, rust_lib_path: 
         } // match
     } // for binary in &package.binaries
 
-    println!("{}", print_string.trim());
+    println!("{}", print_string);
 }
 
 fn main() {
