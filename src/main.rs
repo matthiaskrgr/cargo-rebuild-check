@@ -33,6 +33,21 @@ struct Package {
     binaries: Vec<String>,
 }
 
+// a package that may need rebuild
+#[derive(Debug)]
+#[allow(dead_code)]
+struct RebuildTarget {
+    name: String,
+    version: String,
+    git: Option<String>,
+    branch: Option<String>,
+    tag: Option<String>,
+    rev: Option<String>,
+    registry: Option<String>,
+    path: Option<String>,
+    binaries: Vec<String>,
+}
+
 fn main() {
     // make sure "ldd" is available
     match Command::new("whereis")
@@ -173,11 +188,21 @@ fn main() {
         .filter_map(|binary| check_binary(binary, &bin_dir, &rust_lib_path_string))
         .collect();
 
-    if !broken_pkgs.is_empty() {
+    let rebuilds_required: bool = !broken_pkgs.is_empty();
+
+    if rebuilds_required {
         println!("\n  Crates needing rebuild: {}", broken_pkgs.join(" "));
         std::process::exit(2);
     } else {
         println!("\n  Everything looks good.");
+    }
+
+    // try to rebuild broken packages
+    if rebuilds_required && cfg.is_present("auto-rebuild") {
+        // we need to find out if a package is a git package
+        for pkg in broken_pkgs {
+            println!("rebuilding {:?}", pkg);
+        }
     }
 }
 
