@@ -12,6 +12,7 @@
 //#![cfg_attr(feature = "cargo-clippy", warn(result_unwrap_used))]
 
 extern crate cargo;
+#[macro_use]
 extern crate clap;
 extern crate rayon;
 
@@ -34,7 +35,6 @@ struct Package {
 
 fn main() {
     // make sure "ldd" is available
-
     match Command::new("whereis")
         .arg("ldd")
         .env("LANG", "en_US")
@@ -55,6 +55,36 @@ fn main() {
             std::process::exit(3);
         }
     };
+
+    // parse cmdline args
+
+    let cfg = App::new("cargo-rebuild-check")
+        .version(crate_version!())
+        .bin_name("cargo")
+        .about("find installed crates that need rebuild due to broken library links")
+        .author("matthiaskrgr")
+        .subcommand(
+            SubCommand::with_name("rebuild-check")
+            .version(crate_version!())
+            .bin_name("cargo-rebuild-check")
+            .about("find installed crates that need rebuild due to broken library links")
+            .author("matthiaskrgr")
+            .arg(
+                Arg::with_name("auto-rebuild")
+                .short("a")
+                .long("auto")
+                .help("Try to automatically reinstall broken crates"),
+            ) // arg
+        ) // subcommand
+        .arg(
+            Arg::with_name("auto-rebuild")
+                .short("a")
+                .long("auto")
+                .help("Try to automatically reinstall broken crates"),
+        )
+        .get_matches();
+    // we need this in case we call "cargo-cache" directly
+    let cfg = cfg.subcommand_matches("rebuild-check").unwrap_or(&cfg);
 
     let cargo_cfg = cargo::util::config::Config::default().unwrap();
     let mut bin_dir = cargo_cfg.home().clone().into_path_unlocked();
