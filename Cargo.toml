@@ -9,5 +9,5 @@ cargo = "0.25" # get CARGO_HOME
 rayon = "1.0" # parallelize
 
 [profile.release]
-codegen-units=1
-lto=true
+codegen-units = 1
+lto = true
