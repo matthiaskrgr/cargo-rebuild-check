@@ -12,12 +12,15 @@
 //#![cfg_attr(feature = "cargo-clippy", warn(result_unwrap_used))]
 
 extern crate cargo;
+extern crate clap;
 extern crate rayon;
 
-use std::process::Command;
-use rayon::prelude::*;
 use std::fs::File;
 use std::io::prelude::*;
+use std::process::Command;
+
+use rayon::prelude::*;
+use clap::{App, Arg, SubCommand};
 
 // deserialize the ~/.cargo/.crates.toml
 
@@ -27,54 +30,6 @@ struct Package {
     version: String,
     source: String,
     binaries: Vec<String>,
-}
-
-fn check_binary(
-    package: &Package,
-    bin_dir: &std::path::PathBuf,
-    rust_lib_path: &str,
-) -> Option<String> {
-    let mut print_string =
-        format!("  Checking crate {} {}", package.name, package.version).to_string();
-
-    let mut outdated_package: Option<String> = None;
-    for binary in &package.binaries {
-        let mut bin_path: std::path::PathBuf = bin_dir.clone();
-        bin_path.push(&binary);
-        let binary_path = bin_path.into_os_string().into_string().unwrap();
-        match Command::new("ldd")
-            .arg(&binary_path)
-            .env("LD_LIBRARY_PATH", rust_lib_path)
-            // try to enfore english output to stabilize parsing
-            .env("LANG", "en_US")
-            .env("LC_ALL", "en_US")
-            .output()
-        {
-            Ok(out) => {
-                let output = String::from_utf8_lossy(&out.stdout).into_owned();
-                let mut first = true;
-                for line in output.lines() {
-                    if line.ends_with("=> not found") {
-                        if first {
-                            // package needs rebuild
-                            outdated_package = Some(package.name.clone());
-                            print_string
-                                .push_str(&format!("\n    Binary '{}' is missing:\n", &binary));
-                        }
-                        print_string.push_str(&format!(
-                            "\t\t{}\n",
-                            line.replace("=> not found", "").trim()
-                        ));
-                        first = false;
-                    }
-                }
-            }
-            Err(e) => eprintln!("Error while runnning ldd: '{}'", e),
-        } // match
-    } // for binary in &package.binaries
-
-    println!("{}", print_string);
-    outdated_package
 }
 
 fn main() {
@@ -194,4 +149,52 @@ fn main() {
     } else {
         println!("\n  Everything looks good.");
     }
+}
+
+fn check_binary(
+    package: &Package,
+    bin_dir: &std::path::PathBuf,
+    rust_lib_path: &str,
+) -> Option<String> {
+    let mut print_string =
+        format!("  Checking crate {} {}", package.name, package.version).to_string();
+
+    let mut outdated_package: Option<String> = None;
+    for binary in &package.binaries {
+        let mut bin_path: std::path::PathBuf = bin_dir.clone();
+        bin_path.push(&binary);
+        let binary_path = bin_path.into_os_string().into_string().unwrap();
+        match Command::new("ldd")
+            .arg(&binary_path)
+            .env("LD_LIBRARY_PATH", rust_lib_path)
+            // try to enfore english output to stabilize parsing
+            .env("LANG", "en_US")
+            .env("LC_ALL", "en_US")
+            .output()
+        {
+            Ok(out) => {
+                let output = String::from_utf8_lossy(&out.stdout).into_owned();
+                let mut first = true;
+                for line in output.lines() {
+                    if line.ends_with("=> not found") {
+                        if first {
+                            // package needs rebuild
+                            outdated_package = Some(package.name.clone());
+                            print_string
+                                .push_str(&format!("\n    Binary '{}' is missing:\n", &binary));
+                        }
+                        print_string.push_str(&format!(
+                            "\t\t{}\n",
+                            line.replace("=> not found", "").trim()
+                        ));
+                        first = false;
+                    }
+                }
+            }
+            Err(e) => eprintln!("Error while runnning ldd: '{}'", e),
+        } // match
+    } // for binary in &package.binaries
+
+    println!("{}", print_string);
+    outdated_package
 }
