@@ -6,7 +6,7 @@ authors = ["Matthias Krüger <matthias.krueger@famsik.de>"]
 [dependencies]
 # https://github.com/rust/cargo
 cargo = "0.25" # get CARGO_HOME
-rayon = "0.9" # parallelize
+rayon = "1.0" # parallelize
 
 [profile.release]
 codegen-units=1
