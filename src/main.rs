@@ -49,27 +49,7 @@ struct RebuildTarget {
 }
 
 fn main() {
-    // make sure "ldd" is available
-    match Command::new("whereis")
-        .arg("ldd")
-        .env("LANG", "en_US")
-        .env("LC_ALL", "en_US")
-        .output()
-    {
-        Ok(out) => {
-            let stdout = String::from_utf8_lossy(&out.stdout).into_owned();
-            if stdout.matches(' ').count() < 1 {
-                // assume space seperated words
-                eprintln!("Error: failed to find ldd");
-                std::process::exit(3);
-            }
-        }
-
-        Err(e) => {
-            eprintln!("Error: \"whereis ldd\" failed: '{}'", e);
-            std::process::exit(3);
-        }
-    };
+    assert_lld_is_available();
 
     // parse cmdline args
 
@@ -204,6 +184,30 @@ fn main() {
             println!("rebuilding {:?}", pkg);
         }
     }
+}
+
+fn assert_lld_is_available() {
+    // make sure "ldd" is available
+    match Command::new("whereis")
+        .arg("ldd")
+        .env("LANG", "en_US")
+        .env("LC_ALL", "en_US")
+        .output()
+    {
+        Ok(out) => {
+            let stdout = String::from_utf8_lossy(&out.stdout).into_owned();
+            if stdout.matches(' ').count() < 1 {
+                // assume space seperated words
+                eprintln!("Error: failed to find ldd");
+                std::process::exit(3);
+            }
+        }
+
+        Err(e) => {
+            eprintln!("Error: \"whereis ldd\" failed: '{}'", e);
+            std::process::exit(3);
+        }
+    };
 }
 
 fn check_binary(
