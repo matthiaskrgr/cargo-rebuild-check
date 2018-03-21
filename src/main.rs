@@ -167,6 +167,8 @@ fn main() {
 
     // iterate (in parallel) over the acquired metadata and check for broken library links
     // filter out all None values, only collect the Some() ones
+
+    // todo: can we avoid sorting into a separate vector here?
     let broken_pkgs: Vec<String> = packages
         .par_iter()
         .filter_map(|binary| check_binary(binary, &bin_dir, &rust_lib_path_string))
