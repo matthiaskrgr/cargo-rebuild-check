@@ -45,6 +45,9 @@ fn check_binary(
         match Command::new("ldd")
             .arg(&binary_path)
             .env("LD_LIBRARY_PATH", rust_lib_path)
+            // try to enfore english output to stabilize parsing
+            .env("LANG", "en_US")
+            .env("LC_ALL", "en_US")
             .output()
         {
             Ok(out) => {
@@ -77,7 +80,12 @@ fn check_binary(
 fn main() {
     // make sure "ldd" is available
 
-    match Command::new("whereis").arg("ldd").output() {
+    match Command::new("whereis")
+        .arg("ldd")
+        .env("LANG", "en_US")
+        .env("LC_ALL", "en_US")
+        .output()
+    {
         Ok(out) => {
             let stdout = String::from_utf8_lossy(&out.stdout).into_owned();
             if stdout.matches(' ').count() < 1 {
@@ -148,7 +156,13 @@ fn main() {
     }
 
     // get the path where rustc libs are stored: $(rustc --print sysroot)/lib
-    let rust_lib_path = match Command::new("rustc").arg("--print").arg("sysroot").output() {
+    let rust_lib_path = match Command::new("rustc")
+        .arg("--print")
+        .arg("sysroot")
+        .env("LANG", "en_US")
+        .env("LC_ALL", "en_US")
+        .output()
+    {
         Ok(out) => {
             let mut output = String::from_utf8_lossy(&out.stdout).into_owned();
             // remove \n
