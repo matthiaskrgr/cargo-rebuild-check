@@ -15,6 +15,8 @@ use std::process::Command;
 use std::string::String;
 
 fn has_binary(binary: &str) -> bool {
+    // we need to grab the output so it does not spam in to program stdout
+    // check if we can find the binary
     let _ = match Command::new(&binary)
         .env("LANG", "en_US")
         .env("LC_ALL", "en_US")
@@ -30,6 +32,7 @@ fn has_binary(binary: &str) -> bool {
 }
 
 pub fn all_binaries_available() -> Result<bool, String> {
+    // we need ldd, rustc and cargo
     let mut missing_bins = String::new();
     if !has_binary("ldd") {
         missing_bins.push_str("ldd");
