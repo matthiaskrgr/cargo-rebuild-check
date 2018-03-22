@@ -16,12 +16,16 @@ extern crate cargo;
 extern crate clap;
 extern crate rayon;
 
+mod check_external_cmds;
+
 use std::fs::File;
 use std::io::prelude::*;
 use std::process::Command;
 
 use rayon::prelude::*;
 use clap::{App, Arg, SubCommand};
+
+use check_external_cmds::*;
 
 // deserialize the ~/.cargo/.crates.toml
 
@@ -227,30 +231,6 @@ fn main() {
             println!("WIP Reinstalling {:?}", pkg);
         }
     }
-}
-
-fn assert_lld_is_available() {
-    // make sure "ldd" is available
-    match Command::new("whereis")
-        .arg("ldd")
-        .env("LANG", "en_US")
-        .env("LC_ALL", "en_US")
-        .output()
-    {
-        Ok(out) => {
-            let stdout = String::from_utf8_lossy(&out.stdout).into_owned();
-            if stdout.matches(' ').count() < 1 {
-                // assume space seperated words
-                eprintln!("Error: failed to find ldd");
-                std::process::exit(3);
-            }
-        }
-
-        Err(e) => {
-            eprintln!("Error: \"whereis ldd\" failed: '{}'", e);
-            std::process::exit(3);
-        }
-    };
 }
 
 fn check_binary<'a>(
