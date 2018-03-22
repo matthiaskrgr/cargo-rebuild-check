@@ -43,7 +43,7 @@ fn main() {
     assert_lld_is_available();
 
     let cfg = gen_clap();
-    // we need this in case we call "cargo-cache" directly
+    // we need this in case we call "cargo-rebuild-check" directly
     let cfg = cfg.subcommand_matches("rebuild-check").unwrap_or(&cfg);
 
     let cargo_cfg = cargo::util::config::Config::default().unwrap();
