@@ -25,18 +25,9 @@ use clap::{App, Arg, SubCommand};
 
 // deserialize the ~/.cargo/.crates.toml
 
+// a package that we may need to rebuild
 #[derive(Debug)]
-struct Package {
-    name: String,
-    version: String,
-    sourceinfo: String,
-    binaries: Vec<String>,
-}
-
-// a package that may need rebuild
-#[derive(Debug)]
-#[allow(dead_code)]
-struct RebuildTarget {
+struct CrateInfo {
     name: String,
     version: String,
     git: Option<String>,
@@ -102,7 +93,7 @@ fn main() {
     let mut packages = Vec::new();
 
     for line in file_iter {
-        let mut package_big = RebuildTarget {
+        let mut package = CrateInfo {
             name: String::new(),
             version: String::new(),
             git: None,
@@ -122,15 +113,18 @@ fn main() {
         let sourceinfo = sourceinfo.replace("(", "").replace(")", "");
         let sourceinfo_split: Vec<&str> = sourceinfo.split('+').collect();
         let kind = &sourceinfo_split.first();
-        let addr = &sourceinfo_split.last();
+        let mut addr = &sourceinfo_split.last();
+        let mut addr = addr.unwrap().to_string();
+        addr.pop(); // remove last char which is "
+
+        package.name = name;
+        package.version = version;
 
         match *kind {
-            Some(&"registry") => {
-                package_big.registry = Some(addr.unwrap().to_string());
-            }
+            Some(&"registry") => package.registry = Some(addr),
             Some(&"git") => {
                 // cargo-rebuild-check v0.1.0 (https://github.com/matthiaskrgr/cargo-rebuild-check#2ce1ed0b):
-                let mut split = addr.unwrap().split('#');
+                let mut split = addr.split('#');
                 let mut repo = split.next().unwrap();
                 // rev does not matter unless we have "?rev="
                 // cargo-update v1.4.1 (https://github.com/nabijaczleweli/cargo-update/?rev=ab82e070aaf4755fc38d15ca7d58acf4b697731d#ab82e070):
@@ -156,17 +150,17 @@ fn main() {
 
                 if has_explicit_rev {
                     let explicit_rev = repo.split("?rev=").last().unwrap();
-                    package_big.rev = Some(explicit_rev.to_string());
+                    package.rev = Some(explicit_rev.to_string());
                 } else if has_explicit_tag {
                     let explicit_tag = repo.split("?tag=").last().unwrap();
-                    package_big.tag = Some(explicit_tag.to_string());
+                    package.tag = Some(explicit_tag.to_string());
                 } else if has_explicit_branch {
                     let explicit_branch = repo.split("?branch=").last().unwrap();
-                    package_big.branch = Some(explicit_branch.to_string());
+                    package.branch = Some(explicit_branch.to_string());
                 }
             }
             Some(&"path") => {
-                package_big.path = Some(addr.unwrap().to_string());
+                package.path = Some(addr.to_string());
             }
             Some(&&_) => {
                 let string: &str =
@@ -183,8 +177,6 @@ fn main() {
             }
         }
 
-        let mut binaries = Vec::new();
-
         // collect the binaries a crate has installed
 
         // the line looks like this:
@@ -199,15 +191,9 @@ fn main() {
                 .replace("\"", "")
                 .trim()
                 .to_string();
-            binaries.push(binary);
+            package.binaries.push(binary);
         }
 
-        let package = Package {
-            name,
-            version,
-            sourceinfo: sourceinfo.to_string(),
-            binaries,
-        };
         // collect the packages
         packages.push(package);
     }
@@ -288,7 +274,7 @@ fn assert_lld_is_available() {
 }
 
 fn check_binary(
-    package: &Package,
+    package: &CrateInfo,
     bin_dir: &std::path::PathBuf,
     rust_lib_path: &str,
 ) -> Option<String> {
