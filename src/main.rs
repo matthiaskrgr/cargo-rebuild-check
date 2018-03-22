@@ -42,33 +42,7 @@ struct CrateInfo {
 fn main() {
     assert_lld_is_available();
 
-    // parse cmdline args
-    // TODO move into function
-    let cfg = App::new("cargo-rebuild-check")
-        .version(crate_version!())
-        .bin_name("cargo")
-        .about("find installed crates that need rebuild due to broken library links")
-        .author("matthiaskrgr")
-        .subcommand(
-            SubCommand::with_name("rebuild-check")
-            .version(crate_version!())
-            .bin_name("cargo-rebuild-check")
-            .about("find installed crates that need rebuild due to broken library links")
-            .author("matthiaskrgr")
-            .arg(
-                Arg::with_name("auto-rebuild")
-                .short("a")
-                .long("auto")
-                .help("Try to automatically reinstall broken crates"),
-            ) // arg
-        ) // subcommand
-        .arg(
-            Arg::with_name("auto-rebuild")
-                .short("a")
-                .long("auto")
-                .help("Try to automatically reinstall broken crates"),
-        )
-        .get_matches();
+    let cfg = gen_clap();
     // we need this in case we call "cargo-cache" directly
     let cfg = cfg.subcommand_matches("rebuild-check").unwrap_or(&cfg);
 
@@ -325,4 +299,32 @@ fn check_binary<'a>(
 
     println!("{}", print_string);
     outdated_package
+}
+
+fn gen_clap<'a>() -> clap::ArgMatches<'a> {
+    App::new("cargo-rebuild-check")
+        .version(crate_version!())
+        .bin_name("cargo")
+        .about("find installed crates that need rebuild due to broken library links")
+        .author("matthiaskrgr")
+        .subcommand(
+            SubCommand::with_name("rebuild-check")
+            .version(crate_version!())
+            .bin_name("cargo-rebuild-check")
+            .about("find installed crates that need rebuild due to broken library links")
+            .author("matthiaskrgr")
+            .arg(
+                Arg::with_name("auto-rebuild")
+                .short("a")
+                .long("auto")
+                .help("Try to automatically reinstall broken crates"),
+            ) // arg
+        ) // subcommand
+        .arg(
+            Arg::with_name("auto-rebuild")
+                .short("a")
+                .long("auto")
+                .help("Try to automatically reinstall broken crates"),
+        )
+        .get_matches()
 }
