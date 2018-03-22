@@ -29,7 +29,7 @@ use clap::{App, Arg, SubCommand};
 struct Package {
     name: String,
     version: String,
-    source: String,
+    sourceinfo: String,
     binaries: Vec<String>,
 }
 
@@ -52,7 +52,7 @@ fn main() {
     assert_lld_is_available();
 
     // parse cmdline args
-
+    // TODO move into function
     let cfg = App::new("cargo-rebuild-check")
         .version(crate_version!())
         .bin_name("cargo")
@@ -102,10 +102,87 @@ fn main() {
     let mut packages = Vec::new();
 
     for line in file_iter {
+        let mut package_big = RebuildTarget {
+            name: String::new(),
+            version: String::new(),
+            git: None,
+            branch: None,
+            tag: None,
+            rev: None,
+            registry: None,
+            path: None,
+            binaries: vec![],
+        };
+
         let line_split: Vec<&str> = line.split(' ').collect();
         let name = line_split[0].to_string().replace("\"", "");
         let version = line_split[1].to_string();
-        let source = line_split[2].to_string();
+        let sourceinfo = line_split[2].to_string();
+        // sourceinfo tells us if we have a crates registy or git crate and what
+        let sourceinfo = sourceinfo.replace("(", "").replace(")", "");
+        let sourceinfo_split: Vec<&str> = sourceinfo.split('+').collect();
+        let kind = &sourceinfo_split.first();
+        let addr = &sourceinfo_split.last();
+
+        match *kind {
+            Some(&"registry") => {
+                package_big.registry = Some(addr.unwrap().to_string());
+            }
+            Some(&"git") => {
+                // cargo-rebuild-check v0.1.0 (https://github.com/matthiaskrgr/cargo-rebuild-check#2ce1ed0b):
+                let mut split = addr.unwrap().split('#');
+                let mut repo = split.next().unwrap();
+                // rev does not matter unless we have "?rev="
+                // cargo-update v1.4.1 (https://github.com/nabijaczleweli/cargo-update/?rev=ab82e070aaf4755fc38d15ca7d58acf4b697731d#ab82e070):
+                //
+                let has_explicit_rev: bool = repo.contains("?rev=");
+                let has_explicit_tag: bool = repo.contains("?tag=");
+                let has_explicit_branch: bool = repo.contains("?branch=");
+
+                let should_be_one_at_most =
+                    has_explicit_rev as u8 + has_explicit_tag as u8 + has_explicit_branch as u8;
+                if should_be_one_at_most > 1 {
+                    eprintln!(
+                        "Should only have at most one of rev, tag, branch, had: {}",
+                        should_be_one_at_most
+                    );
+                    eprintln!("line was: '{}'", line);
+                    eprintln!(
+                        "rev: {}, tag: {}, branch: {}",
+                        has_explicit_rev, has_explicit_branch, has_explicit_tag
+                    );
+                    panic!();
+                }
+
+                if has_explicit_rev {
+                    let explicit_rev = repo.split("?rev=").last().unwrap();
+                    package_big.rev = Some(explicit_rev.to_string());
+                } else if has_explicit_tag {
+                    let explicit_tag = repo.split("?tag=").last().unwrap();
+                    package_big.tag = Some(explicit_tag.to_string());
+                } else if has_explicit_branch {
+                    let explicit_branch = repo.split("?branch=").last().unwrap();
+                    package_big.branch = Some(explicit_branch.to_string());
+                }
+            }
+            Some(&"path") => {
+                package_big.path = Some(addr.unwrap().to_string());
+            }
+            Some(&&_) => {
+                let string: &str =
+                    &format!("Unknown sourceinfo kind '{:?}', please file bug!", kind);
+                eprintln!("{}", string);
+                panic!();
+            }
+
+            None => {
+                eprintln!("Failed to parse sourceinfo kind!");
+                eprintln!("Sourceinfo: {}", sourceinfo);
+                eprintln!("Please file a bug!");
+                panic!();
+            }
+        }
+
         let mut binaries = Vec::new();
 
         // collect the binaries a crate has installed
@@ -128,7 +205,7 @@ fn main() {
         let package = Package {
             name,
             version,
-            source,
+            sourceinfo: sourceinfo.to_string(),
             binaries,
         };
         // collect the packages
