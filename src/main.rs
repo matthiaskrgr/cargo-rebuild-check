@@ -44,7 +44,14 @@ struct CrateInfo {
 }
 
 fn main() {
-    assert_lld_is_available();
+    match all_binaries_available() {
+        Ok(_ok) => {}
+        Err(missing_bins) => {
+            eprintln!("Could not find the following binaries: '{}'", missing_bins);
+            eprintln!("Please make them available in your $PATH.");
+            std::process::exit(1);
+        }
+    }
 
     let cfg = gen_clap();
     // we need this in case we call "cargo-rebuild-check" directly

@@ -11,29 +11,40 @@
 #![cfg_attr(feature = "cargo-clippy", warn(stutter))]
 //#![cfg_attr(feature = "cargo-clippy", warn(result_unwrap_used))]
 
-use std;
 use std::process::Command;
+use std::string::String;
 
-pub fn assert_lld_is_available() {
-    // make sure "ldd" is available
-    match Command::new("whereis")
-        .arg("ldd")
+fn has_binary(binary: &str) -> bool {
+    let _ = match Command::new(&binary)
         .env("LANG", "en_US")
         .env("LC_ALL", "en_US")
         .output()
     {
-        Ok(out) => {
-            let stdout = String::from_utf8_lossy(&out.stdout).into_owned();
-            if stdout.matches(' ').count() < 1 {
-                // assume space seperated words
-                eprintln!("Error: failed to find ldd");
-                std::process::exit(3);
-            }
+        Ok(_ok) => {
+            return true;
         }
-
-        Err(e) => {
-            eprintln!("Error: \"whereis ldd\" failed: '{}'", e);
-            std::process::exit(3);
+        Err(_e) => {
+            return false;
         }
     };
+}
+
+pub fn all_binaries_available() -> Result<bool, String> {
+    let mut missing_bins = String::new();
+    if !has_binary("ldd") {
+        missing_bins.push_str("ldd");
+    }
+    if !has_binary("rustc") {
+        missing_bins.push_str(" rustc");
+    }
+    if !has_binary("cargo") {
+        missing_bins.push_str(" cargo");
+    }
+    missing_bins.trim();
+
+    if missing_bins.is_empty() {
+        Ok(true)
+    } else {
+        Err(missing_bins)
+    }
 }
