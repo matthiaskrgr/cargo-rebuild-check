@@ -226,7 +226,7 @@ fn main() {
     // filter out all None values, only collect the Some() ones
 
     // todo: can we avoid sorting into a separate vector here?
-    let broken_pkgs: Vec<String> = packages
+    let broken_pkgs: Vec<&CrateInfo> = packages
         .par_iter()
         .filter_map(|binary| check_binary(binary, &bin_dir, &rust_lib_path_string))
         .collect();
@@ -234,7 +234,13 @@ fn main() {
     let rebuilds_required: bool = !broken_pkgs.is_empty();
 
     if rebuilds_required {
-        println!("\n  Crates needing rebuild: {}", broken_pkgs.join(" "));
+        // concat list of names of crates needing rebuilding
+        let mut pkgs_string = String::new();
+        for pkg in &broken_pkgs {
+            pkgs_string.push_str(&pkg.name);
+            pkgs_string.push_str(" ");
+        }
+        println!("\n  Crates needing rebuild: {}", pkgs_string.trim());
         std::process::exit(2);
     } else {
         println!("\n  Everything looks good.");
@@ -244,7 +250,7 @@ fn main() {
     if rebuilds_required && cfg.is_present("auto-rebuild") {
         // we need to find out if a package is a git package
         for pkg in broken_pkgs {
-            println!("rebuilding {:?}", pkg);
+            println!("WIP Reinstalling {:?}", pkg);
         }
     }
 }
@@ -273,15 +279,15 @@ fn assert_lld_is_available() {
     };
 }
 
-fn check_binary(
-    package: &CrateInfo,
+fn check_binary<'a>(
+    package: &'a CrateInfo,
     bin_dir: &std::path::PathBuf,
     rust_lib_path: &str,
-) -> Option<String> {
+) -> Option<&'a CrateInfo> {
     let mut print_string =
         format!("  Checking crate {} {}", package.name, package.version).to_string();
 
-    let mut outdated_package: Option<String> = None;
+    let mut outdated_package: Option<&CrateInfo> = None;
     for binary in &package.binaries {
         let mut bin_path: std::path::PathBuf = bin_dir.clone();
         bin_path.push(&binary);
@@ -301,7 +307,7 @@ fn check_binary(
                     if line.ends_with("=> not found") {
                         if first {
                             // package needs rebuild
-                            outdated_package = Some(package.name.clone());
+                            outdated_package = Some(package);
                             print_string
                                 .push_str(&format!("\n    Binary '{}' is missing:\n", &binary));
                         }
