@@ -143,9 +143,12 @@ fn main() {
                     let explicit_branch = repo.split("?branch=").last().unwrap();
                     package.branch = Some(explicit_branch.to_string());
                 }
+                let repo_url = repo.split('?').nth(0).unwrap();
+                package.git = Some(repo_url.to_string());
             }
             Some(&"path") => {
-                package.path = Some(addr.to_string());
+                // try to make the path absolute (file:///home/....  -> /home/....)
+                package.path = Some(addr.to_string().replace("file://", "a"));
             }
             Some(&&_) => {
                 let string: &str =
@@ -217,6 +220,7 @@ fn main() {
         .collect();
 
     let rebuilds_required: bool = !broken_pkgs.is_empty();
+    let do_auto_rebuild = cfg.is_present("auto-rebuild");
 
     if rebuilds_required {
         // concat list of names of crates needing rebuilding
@@ -226,20 +230,94 @@ fn main() {
             pkgs_string.push_str(" ");
         }
         println!("\n  Crates needing rebuild: {}", pkgs_string.trim());
-        std::process::exit(2);
+        if !do_auto_rebuild {
+            std::process::exit(2);
+        }
     } else {
         println!("\n  Everything looks good! :)");
     }
     let mut list_of_failures: Vec<String> = Vec::new();
 
     // try to rebuild broken packages
-    if rebuilds_required && cfg.is_present("auto-rebuild") {
+    if rebuilds_required && do_auto_rebuild {
         // we need to find out if a package is a git package
         for pkg in broken_pkgs {
-            println!("{:?}", pkg);
-            run_cargo_install("rerast", &vec![""], &mut list_of_failures);
+            /*
+            name: String,
+            git: Option<String>,
+                branch: Option<String>,
+                tag: Option<String>,
+                rev: Option<String>,
+            registry: Option<String>,
+                version: String,
 
-            println!();
+            path: Option<String>,
+
+            binaries: Vec<String>,
+            };
+            */
+
+            println!("{:?}", pkg);
+            let mut cargo_args: Vec<String> = Vec::new();
+            match pkg.git {
+                Some(ref git_repo_addr) => {
+                    cargo_args.push("--git".to_string());
+                    cargo_args.push(git_repo_addr.to_string());
+                    // we have a git package, check if it has branch, tag or rev, else install from repo
+                    match pkg.branch {
+                        Some(ref branch) => {
+                            cargo_args.push("--branch".to_string());
+                            cargo_args.push(branch.to_string());
+                        }
+                        _ => {}
+                    }
+                    match pkg.tag {
+                        Some(ref tag) => {
+                            cargo_args.push("--tag".to_string());
+                            cargo_args.push(tag.to_string());
+                        }
+                        _ => {}
+                    }
+                    match pkg.rev {
+                        Some(ref rev) => {
+                            cargo_args.push("--rev".to_string());
+                            cargo_args.push(rev.to_string());
+                        }
+                        _ => {}
+                    }
+                } // some(git)
+                None => {
+                    // normal crates.io package?
+                    match pkg.registry {
+                        Some(ref registry) => {
+                            if registry == "https://github.com/rust-lang/crates.io-index" {
+                                // crates io, reinstall the same version
+                                cargo_args.push("--version".to_string());
+                                cargo_args.push(pkg.version.to_string());
+                            } else {
+                                eprintln!("error unknown registry!");
+                                panic!();
+                            }
+                        } // some https://ptpb.pw/rdk0
+                        None => {}
+                    } // match pkg.registry
+                      // if we just have a path, there's not much we can do I guess
+                    match pkg.path {
+                        Some(ref path) => {
+                            cargo_args.push("--path".to_string());
+                            cargo_args.push(path.to_string());
+                        }
+                        None => {}
+                    } // match pkg.path
+                } // pkg.git == None /// else
+            } // match pkg.git
+
+            run_cargo_install(&pkg.name, &cargo_args, &mut list_of_failures);
+
+            println!(
+                "DEBUG install args:    {:?} {:?} {:?}",
+                &pkg.name, &cargo_args, &list_of_failures
+            );
         }
     }
     if !list_of_failures.is_empty() {
@@ -247,7 +325,15 @@ fn main() {
     }
 }
 
-fn run_cargo_install(binary: &str, args: &[&str], list_of_failures: &mut Vec<String>) {
+fn run_cargo_install(binary: &str, args: &[String], list_of_failures: &mut Vec<String>) {
+    //    println!("reinstalling  {}", binary);
+
+    if &binary == &"racer" {
+        println!("racer",);
+    } else {
+        return;
+    }
+
     let mut cargo = Command::new("cargo");
     cargo.arg("install");
     cargo.arg(binary);
@@ -261,8 +347,15 @@ fn run_cargo_install(binary: &str, args: &[&str], list_of_failures: &mut Vec<Str
 
     let cargo_status = cargo.status();
     match cargo_status {
-        Ok(_) => {}
+        Ok(status) => {
+            // bad exit status of cargo, build failed
+            if !status.success() {
+                let bin = binary.to_string();
+                list_of_failures.push(bin);
+            }
+        }
         Err(_) => {
+            // maybe cargo crashed?
             let bin = binary.to_string();
             list_of_failures.push(bin);
         }
@@ -317,7 +410,7 @@ fn check_binary<'a>(
     } // for binary in &package.binaries
 
     println!("{}", print_string);
-    outdated_package
+    Some(package)
 }
 
 fn gen_clap<'a>() -> clap::ArgMatches<'a> {
