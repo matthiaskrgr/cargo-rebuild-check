@@ -249,50 +249,38 @@ fn main() {
                     cargo_args.push("--git".to_string());
                     cargo_args.push(git_repo_addr.to_string());
                     // we have a git package, check if it has branch, tag or rev, else install from repo
-                    match pkg.branch {
-                        Some(ref branch) => {
-                            cargo_args.push("--branch".to_string());
-                            cargo_args.push(branch.to_string());
-                        }
-                        _ => {}
+
+                    if let Some(ref branch) = pkg.branch {
+                        cargo_args.push("--branch".to_string());
+                        cargo_args.push(branch.to_string());
                     }
-                    match pkg.tag {
-                        Some(ref tag) => {
-                            cargo_args.push("--tag".to_string());
-                            cargo_args.push(tag.to_string());
-                        }
-                        _ => {}
+
+                    if let Some(ref tag) = pkg.tag {
+                        cargo_args.push("--tag".to_string());
+                        cargo_args.push(tag.to_string());
                     }
-                    match pkg.rev {
-                        Some(ref rev) => {
-                            cargo_args.push("--rev".to_string());
-                            cargo_args.push(rev.to_string());
-                        }
-                        _ => {}
+                    if let Some(ref rev) = pkg.rev {
+                        cargo_args.push("--rev".to_string());
+                        cargo_args.push(rev.to_string());
                     }
-                } // some(git)
+                } // Some(ref git_repo_addr)
                 None => {
                     // normal crates.io package?
-                    match pkg.registry {
-                        Some(ref registry) => {
-                            if registry == "https://github.com/rust-lang/crates.io-index" {
-                                // crates io, reinstall the same version
-                                cargo_args.push("--version".to_string());
-                                cargo_args.push(pkg.version.to_string());
-                            } else {
-                                eprintln!("error unknown registry!");
-                                panic!();
-                            }
-                        } // some https://ptpb.pw/rdk0
-                        None => {}
+
+                    if let Some(ref registry) = pkg.registry {
+                        if registry == "https://github.com/rust-lang/crates.io-index" {
+                            // crates io, reinstall the same version
+                            cargo_args.push("--version".to_string());
+                            cargo_args.push(pkg.version.to_string());
+                        } else {
+                            eprintln!("error unknown registry!");
+                            panic!();
+                        }
                     } // match pkg.registry
                       // if we just have a path, there's not much we can do I guess
-                    match pkg.path {
-                        Some(ref path) => {
-                            cargo_args.push("--path".to_string());
-                            cargo_args.push(path.to_string());
-                        }
-                        None => {}
+                    if let Some(ref path) = pkg.path {
+                        cargo_args.push("--path".to_string());
+                        cargo_args.push(path.to_string());
                     } // match pkg.path
                 } // pkg.git == None /// else
             } // match pkg.git
