@@ -228,20 +228,23 @@ fn main() {
         println!("\n  Crates needing rebuild: {}", pkgs_string.trim());
         std::process::exit(2);
     } else {
-        println!("\n  Everything looks good.");
+        println!("\n  Everything looks good! :)");
     }
+    let mut list_of_failures: Vec<String> = Vec::new();
 
     // try to rebuild broken packages
     if rebuilds_required && cfg.is_present("auto-rebuild") {
         // we need to find out if a package is a git package
         for pkg in broken_pkgs {
             println!("{:?}", pkg);
+            run_cargo_install("rerast", &vec![""], &mut list_of_failures);
+
             println!();
         }
     }
-    let mut list_of_failures: Vec<String> = Vec::new();
-    run_cargo_install("rerast", &vec![""], &mut list_of_failures);
-    println!("Failed rebuilds: {}", list_of_failures.join(" "));
+    if !list_of_failures.is_empty() {
+        println!("Failed rebuilds: {}", list_of_failures.join(" "));
+    }
 }
 
 fn run_cargo_install(binary: &str, args: &[&str], list_of_failures: &mut Vec<String>) {
