@@ -242,21 +242,6 @@ fn main() {
     if rebuilds_required && do_auto_rebuild {
         // we need to find out if a package is a git package
         for pkg in broken_pkgs {
-            /*
-            name: String,
-            git: Option<String>,
-                branch: Option<String>,
-                tag: Option<String>,
-                rev: Option<String>,
-            registry: Option<String>,
-                version: String,
-
-            path: Option<String>,
-
-            binaries: Vec<String>,
-            };
-            */
-
             println!("{:?}", pkg);
             let mut cargo_args: Vec<String> = Vec::new();
             match pkg.git {
@@ -313,11 +298,6 @@ fn main() {
             } // match pkg.git
 
             run_cargo_install(&pkg.name, &cargo_args, &mut list_of_failures);
-
-            println!(
-                "DEBUG install args:    {:?} {:?} {:?}",
-                &pkg.name, &cargo_args, &list_of_failures
-            );
         }
     }
     if !list_of_failures.is_empty() {
@@ -326,20 +306,12 @@ fn main() {
 }
 
 fn run_cargo_install(binary: &str, args: &[String], list_of_failures: &mut Vec<String>) {
-    //    println!("reinstalling  {}", binary);
-
-    if &binary == &"racer" {
-        println!("racer",);
-    } else {
-        return;
-    }
-
     let mut cargo = Command::new("cargo");
     cargo.arg("install");
     cargo.arg(binary);
     cargo.arg("--force");
     for argument in args {
-        // work around https://github.com/rust-lang/cargo/issues/5229
+        // don't pass empty argument to cargo
         if !argument.is_empty() {
             cargo.arg(argument);
         }
@@ -410,7 +382,7 @@ fn check_binary<'a>(
     } // for binary in &package.binaries
 
     println!("{}", print_string);
-    Some(package)
+    outdated_package
 }
 
 fn gen_clap<'a>() -> clap::ArgMatches<'a> {
