@@ -235,9 +235,38 @@ fn main() {
     if rebuilds_required && cfg.is_present("auto-rebuild") {
         // we need to find out if a package is a git package
         for pkg in broken_pkgs {
-            println!("WIP Reinstalling {:?}", pkg);
+            println!("{:?}", pkg);
+            println!();
         }
     }
+    let mut list_of_failures: Vec<String> = Vec::new();
+    run_cargo_install("rerast", &vec![""], &mut list_of_failures);
+    println!("Failed rebuilds: {}", list_of_failures.join(" "));
+}
+
+fn run_cargo_install(binary: &str, args: &[&str], list_of_failures: &mut Vec<String>) {
+    let mut cargo = Command::new("cargo");
+    cargo.arg("install");
+    cargo.arg(binary);
+    cargo.arg("--force");
+    for argument in args {
+        // work around https://github.com/rust-lang/cargo/issues/5229
+        if !argument.is_empty() {
+            cargo.arg(argument);
+        }
+    }
+
+    let cargo_status = cargo.status();
+    match cargo_status {
+        Ok(_) => {}
+        Err(_) => {
+            let bin = binary.to_string();
+            list_of_failures.push(bin);
+        }
+    }
+
+    println!("status: {:?}", cargo_status);
+    println!("done")
 }
 
 fn check_binary<'a>(
