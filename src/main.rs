@@ -266,7 +266,6 @@ fn main() {
                 } // Some(ref git_repo_addr)
                 None => {
                     // normal crates.io package?
-
                     if let Some(ref registry) = pkg.registry {
                         if registry == "https://github.com/rust-lang/crates.io-index" {
                             // crates io, reinstall the same version
@@ -294,6 +293,7 @@ fn main() {
 }
 
 fn run_cargo_install(binary: &str, args: &[String], list_of_failures: &mut Vec<String>) {
+    println!("Reinstalling {}", binary);
     let mut cargo = Command::new("cargo");
     cargo.arg("install");
     cargo.arg(binary);
@@ -308,21 +308,16 @@ fn run_cargo_install(binary: &str, args: &[String], list_of_failures: &mut Vec<S
     let cargo_status = cargo.status();
     match cargo_status {
         Ok(status) => {
-            // bad exit status of cargo, build failed
+            // bad exit status of cargo, build failed?
             if !status.success() {
-                let bin = binary.to_string();
-                list_of_failures.push(bin);
+                list_of_failures.push(binary.to_string());
             }
         }
         Err(_) => {
             // maybe cargo crashed?
-            let bin = binary.to_string();
-            list_of_failures.push(bin);
+            list_of_failures.push(binary.to_string());
         }
     }
-
-    println!("status: {:?}", cargo_status);
-    println!("done")
 }
 
 fn check_binary<'a>(
