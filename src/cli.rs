@@ -13,6 +13,11 @@
 use clap::{App, Arg, ArgMatches, SubCommand};
 
 pub fn gen_clap<'a>() -> ArgMatches<'a> {
+    let auto_rebuild = Arg::with_name("auto-rebuild")
+        .short("a")
+        .long("auto")
+        .help("Try to automatically reinstall broken crates");
+
     App::new("cargo-rebuild-check")
         .version(crate_version!())
         .bin_name("cargo")
@@ -24,18 +29,8 @@ pub fn gen_clap<'a>() -> ArgMatches<'a> {
             .bin_name("cargo-rebuild-check")
             .about("find installed crates that need rebuild due to broken library links")
             .author("matthiaskrgr")
-            .arg(
-                Arg::with_name("auto-rebuild")
-                .short("a")
-                .long("auto")
-                .help("Try to automatically reinstall broken crates"),
-            ) // arg
+            .arg(&auto_rebuild)
         ) // subcommand
-        .arg(
-            Arg::with_name("auto-rebuild")
-                .short("a")
-                .long("auto")
-                .help("Try to automatically reinstall broken crates"),
-        )
+        .arg(&auto_rebuild)
         .get_matches()
 }
