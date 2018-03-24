@@ -40,6 +40,9 @@ fn main() {
     }
 
     let cfg = gen_clap();
+    // we need this in case we call "cargo-rebuild-check" directly
+    let cfg = cfg.subcommand_matches("rebuild-check").unwrap_or(&cfg);
+
     let cargo_cfg = cargo::util::config::Config::default().unwrap();
     let mut bin_dir = cargo_cfg.home().clone().into_path_unlocked();
     bin_dir.push("bin");
