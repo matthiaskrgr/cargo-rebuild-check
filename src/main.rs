@@ -242,7 +242,6 @@ fn main() {
     if rebuilds_required && do_auto_rebuild {
         // we need to find out if a package is a git package
         for pkg in broken_pkgs {
-            println!("{:?}", pkg);
             let mut cargo_args: Vec<String> = Vec::new();
             match pkg.git {
                 Some(ref git_repo_addr) => {
