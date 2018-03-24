@@ -237,3 +237,30 @@ pub fn get_installed_crate_information() -> Vec<CrateInfo> {
 
     packages
 }
+
+pub fn get_rustc_lib_path() -> String {
+    let rust_lib_path = match Command::new("rustc")
+        .arg("--print")
+        .arg("sysroot")
+        .env("LANG", "en_US")
+        .env("LC_ALL", "en_US")
+        .output()
+    {
+        Ok(out) => {
+            let mut output = String::from_utf8_lossy(&out.stdout).into_owned();
+            // remove \n
+            output.pop();
+            let mut path = std::path::PathBuf::from(output);
+            path.push("lib");
+            path
+        }
+        Err(e) => panic!("Error getting rustc sysroot path '{}'", e),
+    };
+
+    let rust_lib_path_string = rust_lib_path
+        .into_os_string()
+        .into_string()
+        .expect("Failed to convert pathBuf to String");
+
+    rust_lib_path_string
+}

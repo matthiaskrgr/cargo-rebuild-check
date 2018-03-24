@@ -19,8 +19,6 @@ mod check_external_cmds;
 mod cli;
 mod core;
 
-use std::process::Command;
-
 use rayon::prelude::*;
 
 use check_external_cmds::*;
@@ -51,28 +49,7 @@ fn main() {
     let packages = get_installed_crate_information();
 
     // get the path where rustc libs are stored: $(rustc --print sysroot)/lib
-    let rust_lib_path = match Command::new("rustc")
-        .arg("--print")
-        .arg("sysroot")
-        .env("LANG", "en_US")
-        .env("LC_ALL", "en_US")
-        .output()
-    {
-        Ok(out) => {
-            let mut output = String::from_utf8_lossy(&out.stdout).into_owned();
-            // remove \n
-            output.pop();
-            let mut path = std::path::PathBuf::from(output);
-            path.push("lib");
-            path
-        }
-        Err(e) => panic!("Error getting rustc sysroot path '{}'", e),
-    };
-
-    let rust_lib_path_string = rust_lib_path
-        .into_os_string()
-        .into_string()
-        .expect("Failed to convert pathBuf to String");
+    let rust_lib_path = get_rustc_lib_path();
 
     // iterate (in parallel) over the acquired metadata and check for broken library links
     // filter out all None values, only collect the Some() ones
@@ -80,7 +57,7 @@ fn main() {
     // todo: can we avoid sorting into a separate vector here?
     let broken_pkgs: Vec<&CrateInfo> = packages
         .par_iter()
-        .filter_map(|binary| check_binary(binary, &bin_dir, &rust_lib_path_string))
+        .filter_map(|binary| check_binary(binary, &bin_dir, &rust_lib_path))
         .collect();
 
     let rebuilds_required: bool = !broken_pkgs.is_empty();
