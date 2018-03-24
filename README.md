@@ -2,7 +2,7 @@
 
 Checks installed crate binaries for missing library links.
 
-Requires lld, cargo and rustc to be installed.
+Requires ldd, cargo and rustc to be installed.
 
 Use ````cargo rebuild-check --auto```` to automatically rebuild and reinstall crates against newer versions of libraries.
 
