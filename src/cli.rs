@@ -25,11 +25,11 @@ pub fn gen_clap<'a>() -> ArgMatches<'a> {
         .author("matthiaskrgr")
         .subcommand(
             SubCommand::with_name("rebuild-check")
-            .version(crate_version!())
-            .bin_name("cargo-rebuild-check")
-            .about("find installed crates that need rebuild due to broken library links")
-            .author("matthiaskrgr")
-            .arg(&auto_rebuild)
+                .version(crate_version!())
+                .bin_name("cargo-rebuild-check")
+                .about("find installed crates that need rebuild due to broken library links")
+                .author("matthiaskrgr")
+                .arg(&auto_rebuild),
         ) // subcommand
         .arg(&auto_rebuild)
         .get_matches()
