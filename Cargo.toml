@@ -9,6 +9,13 @@ cargo = "0.25" # get CARGO_HOME
 rayon = "1.0" # parallelize
 clap = "2.31" # CLI parsing
 
+[dev-dependencies]
+bencher = "0.1.5" # benchmarks
+
 [profile.release]
+codegen-units = 1
+lto = true
+
+[profile.bench]
 codegen-units = 1
 lto = true

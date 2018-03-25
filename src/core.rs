@@ -1,18 +1,6 @@
-// enable additional rustc warnings
-#![warn(trivial_casts, trivial_numeric_casts, unsafe_code)]
-// enable additional clippy warnings
-#![cfg_attr(feature = "cargo-clippy", warn(int_plus_one))]
-#![cfg_attr(feature = "cargo-clippy", warn(shadow_reuse, shadow_same, shadow_unrelated))]
-#![cfg_attr(feature = "cargo-clippy", warn(mut_mut))]
-#![cfg_attr(feature = "cargo-clippy", warn(nonminimal_bool))]
-#![cfg_attr(feature = "cargo-clippy", warn(pub_enum_variant_names))]
-#![cfg_attr(feature = "cargo-clippy", warn(range_plus_one))]
-#![cfg_attr(feature = "cargo-clippy", warn(string_add, string_add_assign))]
-#![cfg_attr(feature = "cargo-clippy", warn(stutter))]
-
 extern crate cargo;
-
 extern crate rayon;
+extern crate test;
 
 use std;
 use std::fs::File;
@@ -357,3 +345,29 @@ pub fn check_and_rebuild_broken_crates(
         println!("Failed rebuilds: {}", list_of_failures.join(" "));
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use self::test::Bencher;
+
+    #[test]
+    fn empty() {}
+
+    #[bench]
+    fn bench_print(b: &mut Bencher) {
+        b.iter(|| println!(2));
+    }
+
+    #[bench]
+    fn bench_line_simple(b: &mut Bencher) {
+        let line = "\"gitgc 0.1.0 (git+https://github.com/matthiaskrgr/gitgc#038fbf2cbfb0120cb2cb7960f713e3d80aa0b95f)\" = [\"gitgc\"]";
+        b.iter(|| decode_line(line))
+    }
+
+    #[bench]
+    fn bench_line_binaries(b: &mut Bencher) {
+        let line = "\"rustfmt-nightly 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)\" = [\"cargo-fmt\", \"git-rustfmt\", \"rustfmt\", \"rustfmt-format-diff\"]";
+        b.iter(|| decode_line(line))
+    }
+} // mod test

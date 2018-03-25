@@ -1,3 +1,4 @@
+#![feature(test)]
 // enable additional rustc warnings
 #![warn(trivial_casts, trivial_numeric_casts, unsafe_code)]
 // enable additional clippy warnings
