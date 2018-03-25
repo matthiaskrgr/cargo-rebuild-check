@@ -50,3 +50,20 @@ pub fn all_binaries_available() -> Result<bool, String> {
         Err(missing_bins)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn no_binary_found() {
+        use check_external_cmds::*;
+        use std::env;
+        // clear PATH var
+        env::set_var("PATH", "");
+        // make sure it is empty
+        assert_eq!(env::var("PATH"), Ok("".to_string()));
+
+        let missing_binaries = all_binaries_available();
+        // make sure we return that all 3 binaries are missing
+        assert_eq!(missing_binaries, Err("ldd rustc cargo".to_string()));
+    }
+}
