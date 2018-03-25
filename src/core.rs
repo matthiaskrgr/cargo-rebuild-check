@@ -102,7 +102,7 @@ pub fn check_binary<'a>(
                     }
                 }
             }
-            Err(e) => eprintln!("Error while runnning ldd: '{}'", e),
+            Err(e) => eprintln!("Error while running ldd: '{}'", e),
         } // match
     } // for binary in &package.binaries
 
