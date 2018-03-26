@@ -171,7 +171,7 @@ mod tests {
     use self::test::Bencher;
 
     #[test]
-    fn git_simple() {
+    fn decode_line_git_simple() {
         let line = "\"cargo-cache 0.1.0 (git+http://github.com/matthiaskrgr/cargo-cache#6083f409343aeb8c7fcedd1877fd1ae4ef8c9e49)\" = [\"cargo-cache\"]";
         let ci = decode_line(line); // crate info obj
         assert_eq!(ci.name, "cargo-cache");
@@ -189,7 +189,7 @@ mod tests {
     }
 
     #[test]
-    fn git_branch() {
+    fn decode_line_git_branch() {
         let line = "\"alacritty 0.1.0 (git+https://github.com/jwilm/alacritty/?branch=scrollback#9ee1cf2455d5512b087757e09451f9d122548da2)\" = [\"alacritty\"]";
         let ci = decode_line(line);
         assert_eq!(ci.name, "alacritty");
@@ -207,7 +207,7 @@ mod tests {
     }
 
     #[test]
-    fn git_tag() {
+    fn decode_line_git_tag() {
         let line = "\"ripgrep 0.8.0 (git+https://github.com/BurntSushi/ripgrep?tag=0.8.0#23d1b91eaddbfb886a3a99d615f49551cd35cb6c)\" = [\"rg\"]";
         let ci = decode_line(line);
         assert_eq!(ci.name, "ripgrep");
@@ -225,7 +225,7 @@ mod tests {
     }
 
     #[test]
-    fn git_rev() {
+    fn decode_line_git_rev() {
         let line = "\"cargo-rebuild-check 0.1.0 (git+https://github.com/matthiaskrgr/cargo-rebuild-check?rev=37a364d852f697612fede36546cbb31ef0265f08#37a364d852f697612fede36546cbb31ef0265f08)\" = [\"cargo-rebuild-check\"]";
         let ci = decode_line(line);
         assert_eq!(ci.name, "cargo-rebuild-check");
@@ -245,7 +245,7 @@ mod tests {
         assert_eq!(ci.binaries, vec!["cargo-rebuild-check"]);
     }
     #[test]
-    fn registry() {
+    fn decode_line_registry() {
         let line = "\"mdbook 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)\" = [\"mdbook\"]";
         let ci = decode_line(line);
         assert_eq!(ci.name, "mdbook");
@@ -263,7 +263,7 @@ mod tests {
     }
 
     #[test]
-    fn path() {
+    fn decode_line_path() {
         let line = "\"racer 2.0.12 (path+file:///tmp/racer)\" = [\"racer\"]";
         let ci = decode_line(line);
         assert_eq!(ci.name, "racer");
@@ -278,7 +278,7 @@ mod tests {
     }
 
     #[test]
-    fn multiple_binaries() {
+    fn decode_line_multiple_binaries() {
         let line = "\"rustfmt-nightly 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)\" = [\"cargo-fmt\", \"git-rustfmt\", \"rustfmt\", \"rustfmt-format-diff\"]";
         let ci = decode_line(line);
         assert_eq!(ci.name, "rustfmt-nightly");
