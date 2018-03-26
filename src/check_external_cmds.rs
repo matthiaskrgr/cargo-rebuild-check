@@ -51,30 +51,37 @@ pub fn all_binaries_available() -> Result<bool, String> {
     }
 }
 
-/*
-
-// this currently breaks cli::tests::test_help
 #[cfg(test)]
-
 mod tests {
+    use std;
+    use std::process::Command;
     #[test]
     fn no_binary_found() {
-        use check_external_cmds::*;
-        use std::env;
-        // save PATH to we can restore later
-        let saved_PATH = env::var("PATH").unwrap();
-        let saved_PATH_backup = saved_PATH.clone();
-        // clear PATH var
-        env::set_var("PATH", "");
-        // make sure it is empty
-        assert_eq!(env::var("PATH"), Ok("".to_string()));
+        // do this similar to test_help
+        // run a "cargo build", execute the binary with the PATH env var cleared
+        // assert that we get a warning as output
+        let mut dir = std::env::current_dir().unwrap();
+        //println!("dir: {:?}", dir);
+        let cargo_cmd = Command::new("cargo")
+            .arg("build")
+            .current_dir(&dir)
+            .output();
+        // cargo build is ok
+        assert!(cargo_cmd.unwrap().status.success());
 
-        let missing_binaries = all_binaries_available();
-        // make sure we return that all 3 binaries are missing
-        assert_eq!(missing_binaries, Err("ldd rustc cargo".to_string()));
-        // restore PATH
-        env::set_var("PATH", saved_PATH);
-        assert_eq!(env::var("PATH"), Ok(saved_PATH_backup));
+        dir.push("target");
+        dir.push("debug");
+        let crc_cmd = Command::new("cargo-rebuild-check")
+            .current_dir(&dir)
+            .env("PATH", "")
+            .output()
+            .unwrap();
+        // assert that we failed
+        assert!(!crc_cmd.status.success());
+        assert!(crc_cmd.stdout.is_empty());
+        let output = String::from_utf8_lossy(&crc_cmd.stderr);
+        let error_msg = "Could not find the following binaries: 'ldd rustc cargo'
+Please make them available in your $PATH.\n";
+        assert_eq!(output, error_msg);
     }
 }
-*/
