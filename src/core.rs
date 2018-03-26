@@ -53,6 +53,7 @@ fn check_bin_with_ldd(
     binary_path: &str,
     rustc_lib_path: &str,
 ) -> Result<std::process::Output, std::io::Error> {
+    // checks a single binary with ldd
     Command::new("ldd")
         .arg(&binary_path)
         .env("LD_LIBRARY_PATH", rustc_lib_path)
@@ -65,7 +66,7 @@ fn check_bin_with_ldd(
 fn parse_ldd_output<'a>(
     output_string: &mut String,
     ldd_result: &Result<std::process::Output, std::io::Error>,
-    binary: String,
+    binary: &str,
     package: &'a CrateInfo,
 ) -> Option<&'a CrateInfo> {
     // assume package is not outdated
@@ -96,16 +97,15 @@ fn parse_ldd_output<'a>(
             eprintln!("Error while running ldd: '{}'", e);
         } // Err
     } // match
-
     outdated_package
 }
 
-pub fn check_binary<'a>(
+pub fn check_crate<'a>(
     package: &'a CrateInfo,
     bin_dir: &std::path::PathBuf,
     rustc_lib_path: &str,
 ) -> Option<&'a CrateInfo> {
-    let mut print_string =
+    let mut output_string =
         format!("  Checking crate {} {}", package.name, package.version).to_string();
 
     let mut outdated_package: Option<&CrateInfo> = None;
@@ -113,32 +113,11 @@ pub fn check_binary<'a>(
         let mut bin_path: std::path::PathBuf = bin_dir.clone();
         bin_path.push(&binary);
         let binary_path = bin_path.into_os_string().into_string().unwrap();
-        let ldd_output = check_bin_with_ldd(&binary_path, &rustc_lib_path);
-        match ldd_output {
-            Ok(out) => {
-                let output = String::from_utf8_lossy(&out.stdout).into_owned();
-                let mut first = true;
-                for line in output.lines() {
-                    if line.ends_with("=> not found") {
-                        if first {
-                            // package needs rebuild
-                            outdated_package = Some(package);
-                            print_string
-                                .push_str(&format!("\n    Binary '{}' is missing:\n", &binary));
-                        }
-                        print_string.push_str(&format!(
-                            "\t\t{}\n",
-                            line.replace("=> not found", "").trim()
-                        ));
-                        first = false;
-                    }
-                }
-            }
-            Err(e) => eprintln!("Error while running ldd: '{}'", e),
-        } // match
-    } // for binary in &package.binaries
+        let ldd_result = check_bin_with_ldd(&binary_path, &rustc_lib_path);
 
-    println!("{}", print_string);
+        outdated_package = parse_ldd_output(&mut output_string, &ldd_result, &binary, &package);
+    }
+    println!("{}", &output_string);
     outdated_package
 }
 
@@ -181,7 +160,7 @@ pub fn check_and_rebuild_broken_crates(
     // todo: can we avoid sorting into a separate vector here?
     let broken_pkgs: Vec<&CrateInfo> = packages
         .par_iter()
-        .filter_map(|binary| check_binary(binary, &bin_dir, &rust_lib_path))
+        .filter_map(|crate_| check_crate(crate_, &bin_dir, &rust_lib_path))
         .collect();
 
     let rebuilds_required: bool = !broken_pkgs.is_empty();
