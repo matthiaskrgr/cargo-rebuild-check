@@ -236,6 +236,7 @@ pub fn check_and_rebuild_broken_crates(
 mod tests {
     use super::*;
     use self::test::Bencher;
+    use parse::*;
 
     #[test]
     fn package_needs_rebuild() {
@@ -309,6 +310,74 @@ libm.so.6 => /usr/lib/libm.so.6 (0x00007f2366d0b000)
             &clippy_crateinfo,
         );
         assert!(parsed.is_none());
+    }
+
+    #[bench]
+    fn bench_decode_ldd_output_all_libs_found(b: &mut Bencher) {
+        let clippy_line ="\"clippy 0.0.189 (registry+https://github.com/rust-lang/crates.io-index)\" = [\"cargo-clippy\", \"clippy-driver\"]";
+
+        let clippy_crateinfo = decode_line(&clippy_line);
+
+        let mut to_be_printed_string = "".to_string();
+        // clippy-driver
+        let ldd_output = "    linux-vdso.so.1 (0x00007ffec37d0000)
+librustc_driver-6516506ab0349d45.so => foo.so
+librustc_plugin-14c7fbb709ee1764.so => foo.so
+librustc_typeck-ca6d3c89de970134.so => foo.so
+librustc-6b0d6e07668228e2.so => foo.so
+libsyntax-5ece0a81ed6c5461.so => foo.so
+librustc_errors-7907d589f279528b.so => foo.so
+libsyntax_pos-610524479a0d36fa.so => foo.so
+librustc_data_structures-b8a8de55dc5cd1ce.so => foo.so
+libstd-0cfbe79f10411924.so => foo.so
+libpthread.so.0 => /usr/lib/libpthread.so.0 (0x00007f2367625000)
+libgcc_s.so.1 => /usr/lib/libgcc_s.so.1 (0x00007f236740e000)
+libc.so.6 => /usr/lib/libc.so.6 (0x00007f2367057000)
+libm.so.6 => /usr/lib/libm.so.6 (0x00007f2366d0b000)
+/lib64/ld-linux-x86-64.so.2 => /usr/lib64/ld-linux-x86-64.so.2 (0x00007f2367c6f000)\n";
+
+        b.iter(|| {
+            parse_ldd_output(
+                &mut to_be_printed_string,
+                ldd_output,
+                "clippy-driver",
+                &clippy_crateinfo,
+            )
+        });
+    }
+
+    #[bench]
+    fn bench_decode_ldd_output_some_libs_not_found(b: &mut Bencher) {
+        let clippy_line ="\"clippy 0.0.189 (registry+https://github.com/rust-lang/crates.io-index)\" = [\"cargo-clippy\", \"clippy-driver\"]";
+
+        let clippy_crateinfo = decode_line(&clippy_line);
+
+        let mut to_be_printed_string = "".to_string();
+        // clippy-driver
+        let ldd_output = "    linux-vdso.so.1 (0x00007ffec37d0000)
+            librustc_driver-6516506ab0349d45.so => not found
+            librustc_plugin-14c7fbb709ee1764.so => not found
+            librustc_typeck-ca6d3c89de970134.so => not found
+            librustc-6b0d6e07668228e2.so => not found
+            libsyntax-5ece0a81ed6c5461.so => not found
+            librustc_errors-7907d589f279528b.so => not found
+            libsyntax_pos-610524479a0d36fa.so => not found
+            librustc_data_structures-b8a8de55dc5cd1ce.so => not found
+            libstd-0cfbe79f10411924.so => not found
+            libpthread.so.0 => /usr/lib/libpthread.so.0 (0x00007f2367625000)
+            libgcc_s.so.1 => /usr/lib/libgcc_s.so.1 (0x00007f236740e000)
+            libc.so.6 => /usr/lib/libc.so.6 (0x00007f2367057000)
+            libm.so.6 => /usr/lib/libm.so.6 (0x00007f2366d0b000)
+            /lib64/ld-linux-x86-64.so.2 => /usr/lib64/ld-linux-x86-64.so.2 (0x00007f2367c6f000)\n";
+
+        b.iter(|| {
+            parse_ldd_output(
+                &mut to_be_printed_string,
+                ldd_output,
+                "clippy-driver",
+                &clippy_crateinfo,
+            )
+        });
     }
 
 } // mod test
