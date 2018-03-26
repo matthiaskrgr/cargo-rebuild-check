@@ -18,10 +18,12 @@ extern crate clap;
 mod check_external_cmds;
 mod cli;
 mod core;
+mod parse;
 
 use check_external_cmds::*;
 use cli::*;
 use core::*;
+use parse::*;
 
 // deserialize the ~/.cargo/.crates.toml
 
