@@ -236,7 +236,6 @@ pub fn check_and_rebuild_broken_crates(
 mod tests {
     use super::*;
     use self::test::Bencher;
-    use parse::*;
 
     #[test]
     fn package_needs_rebuild() {
