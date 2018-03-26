@@ -130,7 +130,7 @@ pub fn decode_line(line: &str) -> self::CrateInfo {
         }
         Some(&"path") => {
             // try to make the path absolute (file:///home/....  -> /home/....)
-            package.path = Some(addr.to_string().replace("file://", "a"));
+            package.path = Some(addr.to_string().replace("file://", ""));
         }
         Some(&&_) => {
             let string: &str = &format!("Unknown sourceinfo kind '{:?}', please file bug!", kind);
@@ -171,11 +171,131 @@ mod tests {
     use self::test::Bencher;
 
     #[test]
-    fn empty() {}
+    fn git_simple() {
+        let line = "\"cargo-cache 0.1.0 (git+http://github.com/matthiaskrgr/cargo-cache#6083f409343aeb8c7fcedd1877fd1ae4ef8c9e49)\" = [\"cargo-cache\"]";
+        let ci = decode_line(line); // crate info obj
+        assert_eq!(ci.name, "cargo-cache");
+        assert_eq!(ci.version, "0.1.0");
+        assert_eq!(
+            ci.git,
+            Some("http://github.com/matthiaskrgr/cargo-cache".to_string())
+        );
+        assert_eq!(ci.branch, None);
+        assert_eq!(ci.tag, None);
+        assert_eq!(ci.rev, None);
+        assert_eq!(ci.registry, None);
+        assert_eq!(ci.path, None);
+        assert_eq!(ci.binaries, vec!["cargo-cache"]);
+    }
 
-    #[bench]
-    fn bench_print(b: &mut Bencher) {
-        b.iter(|| println!(2));
+    #[test]
+    fn git_branch() {
+        let line = "\"alacritty 0.1.0 (git+https://github.com/jwilm/alacritty/?branch=scrollback#9ee1cf2455d5512b087757e09451f9d122548da2)\" = [\"alacritty\"]";
+        let ci = decode_line(line);
+        assert_eq!(ci.name, "alacritty");
+        assert_eq!(ci.version, "0.1.0");
+        assert_eq!(
+            ci.git,
+            Some("https://github.com/jwilm/alacritty/".to_string())
+        );
+        assert_eq!(ci.branch, Some("scrollback".to_string()));
+        assert_eq!(ci.tag, None);
+        assert_eq!(ci.rev, None);
+        assert_eq!(ci.registry, None);
+        assert_eq!(ci.path, None);
+        assert_eq!(ci.binaries, vec!["alacritty"]);
+    }
+
+    #[test]
+    fn git_tag() {
+        let line = "\"ripgrep 0.8.0 (git+https://github.com/BurntSushi/ripgrep?tag=0.8.0#23d1b91eaddbfb886a3a99d615f49551cd35cb6c)\" = [\"rg\"]";
+        let ci = decode_line(line);
+        assert_eq!(ci.name, "ripgrep");
+        assert_eq!(ci.version, "0.8.0");
+        assert_eq!(
+            ci.git,
+            Some("https://github.com/BurntSushi/ripgrep".to_string())
+        );
+        assert_eq!(ci.branch, None);
+        assert_eq!(ci.tag, Some("0.8.0".to_string()));
+        assert_eq!(ci.rev, None);
+        assert_eq!(ci.registry, None);
+        assert_eq!(ci.path, None);
+        assert_eq!(ci.binaries, vec!["rg"]);
+    }
+
+    #[test]
+    fn git_rev() {
+        let line = "\"cargo-rebuild-check 0.1.0 (git+https://github.com/matthiaskrgr/cargo-rebuild-check?rev=37a364d852f697612fede36546cbb31ef0265f08#37a364d852f697612fede36546cbb31ef0265f08)\" = [\"cargo-rebuild-check\"]";
+        let ci = decode_line(line);
+        assert_eq!(ci.name, "cargo-rebuild-check");
+        assert_eq!(ci.version, "0.1.0");
+        assert_eq!(
+            ci.git,
+            Some("https://github.com/matthiaskrgr/cargo-rebuild-check".to_string())
+        );
+        assert_eq!(ci.branch, None);
+        assert_eq!(ci.tag, None);
+        assert_eq!(
+            ci.rev,
+            Some("37a364d852f697612fede36546cbb31ef0265f08".to_string())
+        );
+        assert_eq!(ci.registry, None);
+        assert_eq!(ci.path, None);
+        assert_eq!(ci.binaries, vec!["cargo-rebuild-check"]);
+    }
+    #[test]
+    fn registry() {
+        let line = "\"mdbook 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)\" = [\"mdbook\"]";
+        let ci = decode_line(line);
+        assert_eq!(ci.name, "mdbook");
+        assert_eq!(ci.version, "0.1.5");
+        assert_eq!(ci.git, None,);
+        assert_eq!(ci.branch, None);
+        assert_eq!(ci.tag, None);
+        assert_eq!(ci.rev, None);
+        assert_eq!(
+            ci.registry,
+            Some("https://github.com/rust-lang/crates.io-index".to_string())
+        );
+        assert_eq!(ci.path, None);
+        assert_eq!(ci.binaries, vec!["mdbook"]);
+    }
+
+    #[test]
+    fn path() {
+        let line = "\"racer 2.0.12 (path+file:///tmp/racer)\" = [\"racer\"]";
+        let ci = decode_line(line);
+        assert_eq!(ci.name, "racer");
+        assert_eq!(ci.version, "2.0.12");
+        assert_eq!(ci.git, None,);
+        assert_eq!(ci.branch, None);
+        assert_eq!(ci.tag, None);
+        assert_eq!(ci.rev, None);
+        assert_eq!(ci.registry, None);
+        assert_eq!(ci.path, Some("/tmp/racer".to_string()));
+        assert_eq!(ci.binaries, vec!["racer"]);
+    }
+
+    #[test]
+    fn multiple_binaries() {
+        let line = "\"rustfmt-nightly 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)\" = [\"cargo-fmt\", \"git-rustfmt\", \"rustfmt\", \"rustfmt-format-diff\"]";
+        let ci = decode_line(line);
+        assert_eq!(ci.name, "rustfmt-nightly");
+        assert_eq!(ci.version, "0.4.1");
+        assert_eq!(ci.git, None,);
+        assert_eq!(ci.branch, None);
+        assert_eq!(ci.tag, None);
+        assert_eq!(ci.rev, None);
+        assert_eq!(
+            ci.registry,
+            Some("https://github.com/rust-lang/crates.io-index".to_string())
+        );
+        assert_eq!(ci.path, None);
+        assert_eq!(
+            ci.binaries,
+            vec!["cargo-fmt", "git-rustfmt", "rustfmt", "rustfmt-format-diff"]
+        );
     }
 
     #[bench]
@@ -189,4 +309,4 @@ mod tests {
         let line = "\"rustfmt-nightly 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)\" = [\"cargo-fmt\", \"git-rustfmt\", \"rustfmt\", \"rustfmt-format-diff\"]";
         b.iter(|| decode_line(line))
     }
-} // mod te
+} // mod test
