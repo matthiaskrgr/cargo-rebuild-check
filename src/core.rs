@@ -56,10 +56,48 @@ fn check_bin_with_ldd(
     Command::new("ldd")
         .arg(&binary_path)
         .env("LD_LIBRARY_PATH", rustc_lib_path)
-        // try to enfore english output to stabilize parsing
+        // try to enforce english output to stabilize parsing
         .env("LANG", "en_US")
         .env("LC_ALL", "en_US")
         .output()
+}
+
+fn parse_ldd_output<'a>(
+    output_string: &mut String,
+    ldd_result: &Result<std::process::Output, std::io::Error>,
+    binary: String,
+    package: &'a CrateInfo,
+) -> Option<&'a CrateInfo> {
+    // assume package is not outdated
+    let mut outdated_package: Option<&CrateInfo> = None;
+
+    match ldd_result {
+        &Ok(ref out) => {
+            let output = String::from_utf8_lossy(&out.stdout).into_owned();
+            let mut first = true;
+            for line in output.lines() {
+                if line.ends_with("=> not found") {
+                    if first {
+                        // we found a broken link, assume package is outdated
+                        outdated_package = Some(package);
+                        output_string
+                            .push_str(&format!("\n    Binary '{}' is missing:\n", &binary));
+                    }
+                    output_string.push_str(&format!(
+                        "\t\t{}\n",
+                        line.replace("=> not found", "").trim()
+                    ));
+                    first = false;
+                } // not found
+            } // for line in output.lines()
+        } // Ok
+        &Err(ref e) => {
+            // something went wrong while running ldd
+            eprintln!("Error while running ldd: '{}'", e);
+        } // Err
+    } // match
+
+    outdated_package
 }
 
 pub fn check_binary<'a>(
