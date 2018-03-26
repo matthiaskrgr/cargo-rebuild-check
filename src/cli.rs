@@ -57,7 +57,7 @@ mod tests {
 
         dir.push("target");
         dir.push("debug");
-        let crc_cmd = Command::new("cargo-rebuild-check")
+        let crc_cmd = Command::new("./cargo-rebuild-check")
             .arg("--help")
             .current_dir(&dir)
             .env("LANG", "en_US")
