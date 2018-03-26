@@ -61,7 +61,6 @@ mod tests {
         // run a "cargo build", execute the binary with the PATH env var cleared
         // assert that we get a warning as output
         let mut dir = std::env::current_dir().unwrap();
-        //println!("dir: {:?}", dir);
         let cargo_cmd = Command::new("cargo")
             .arg("build")
             .current_dir(&dir)
@@ -74,6 +73,8 @@ mod tests {
         let crc_cmd = Command::new("cargo-rebuild-check")
             .current_dir(&dir)
             .env("PATH", "")
+            .env("LANG", "en_US")
+            .env("LC_ALL", "en_US")
             .output()
             .unwrap();
         // assert that we failed

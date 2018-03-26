@@ -46,9 +46,8 @@ mod tests {
         // this is a hack
         // we launch "cargo build", build the crate and when running the executable
         // make sure we get the desired output
-
         let mut dir = std::env::current_dir().unwrap();
-        println!("dir: {:?}", dir);
+        //println!("dir: {:?}", );
         let cargo_cmd = Command::new("cargo")
             .arg("build")
             .current_dir(&dir)
@@ -61,6 +60,8 @@ mod tests {
         let crc_cmd = Command::new("cargo-rebuild-check")
             .arg("--help")
             .current_dir(&dir)
+            .env("LANG", "en_US")
+            .env("LC_ALL", "en_US")
             .output()
             .unwrap();
 
