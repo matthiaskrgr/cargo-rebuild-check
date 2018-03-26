@@ -18,6 +18,7 @@ use std::fs::File;
 use std::io::prelude::*;
 
 // a package that we may need to rebuild
+#[derive(Debug)]
 pub struct CrateInfo {
     pub name: String,
     pub version: String,

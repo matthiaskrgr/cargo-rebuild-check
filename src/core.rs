@@ -49,54 +49,52 @@ pub fn run_cargo_install(binary: &str, args: &[String], list_of_failures: &mut V
     }
 }
 
-fn check_bin_with_ldd(
-    binary_path: &str,
-    rustc_lib_path: &str,
-) -> Result<std::process::Output, std::io::Error> {
+fn check_bin_with_ldd(binary_path: &str, rustc_lib_path: &str) -> String {
     // checks a single binary with ldd
-    Command::new("ldd")
+    let result = Command::new("ldd")
         .arg(&binary_path)
         .env("LD_LIBRARY_PATH", rustc_lib_path)
         // try to enforce english output to stabilize parsing
         .env("LANG", "en_US")
         .env("LC_ALL", "en_US")
-        .output()
+        .output();
+    let text = match result {
+        Ok(out) => String::from_utf8_lossy(&out.stdout).into_owned(),
+        Err(e) => {
+            // something went wrong while running ldd
+            eprintln!("Error while running ldd: '{}'", e);
+            std::process::exit(3);
+        }
+    }; // match
+    text
 }
 
 fn parse_ldd_output<'a>(
     output_string: &mut String,
-    ldd_result: &Result<std::process::Output, std::io::Error>,
+    ldd_result: &str,
     binary: &str,
     package: &'a CrateInfo,
 ) -> Option<&'a CrateInfo> {
     // assume package is not outdated
     let mut outdated_package: Option<&CrateInfo> = None;
 
-    match ldd_result {
-        &Ok(ref out) => {
-            let output = String::from_utf8_lossy(&out.stdout).into_owned();
-            let mut first = true;
-            for line in output.lines() {
-                if line.ends_with("=> not found") {
-                    if first {
-                        // we found a broken link, assume package is outdated
-                        outdated_package = Some(package);
-                        output_string
-                            .push_str(&format!("\n    Binary '{}' is missing:\n", &binary));
-                    }
-                    output_string.push_str(&format!(
-                        "\t\t{}\n",
-                        line.replace("=> not found", "").trim()
-                    ));
-                    first = false;
-                } // not found
-            } // for line in output.lines()
-        } // Ok
-        &Err(ref e) => {
-            // something went wrong while running ldd
-            eprintln!("Error while running ldd: '{}'", e);
-        } // Err
-    } // match
+    let output = ldd_result;
+    let mut first = true;
+    for line in output.lines() {
+        if line.ends_with("=> not found") {
+            if first {
+                // we found a broken link, assume package is outdated
+                outdated_package = Some(package);
+                output_string.push_str(&format!("\n    Binary '{}' is missing:\n", &binary));
+            }
+            output_string.push_str(&format!(
+                "\t\t{}\n",
+                line.replace("=> not found", "").trim()
+            ));
+            first = false;
+        } // not found
+    } // for line in output.lines()
+
     outdated_package
 }
 
@@ -240,11 +238,77 @@ mod tests {
     use self::test::Bencher;
 
     #[test]
-    fn empty() {}
+    fn package_needs_rebuild() {
+        let clippy_line ="\"clippy 0.0.189 (registry+https://github.com/rust-lang/crates.io-index)\" = [\"cargo-clippy\", \"clippy-driver\"]";
 
-    #[bench]
-    fn bench_print(b: &mut Bencher) {
-        b.iter(|| println!(2));
+        let clippy_crateinfo = decode_line(&clippy_line);
+
+        let mut to_be_printed_string = "".to_string();
+        // clippy-driver
+        let ldd_output = "    linux-vdso.so.1 (0x00007ffec37d0000)
+    librustc_driver-6516506ab0349d45.so => not found
+    librustc_plugin-14c7fbb709ee1764.so => not found
+    librustc_typeck-ca6d3c89de970134.so => not found
+    librustc-6b0d6e07668228e2.so => not found
+    libsyntax-5ece0a81ed6c5461.so => not found
+    librustc_errors-7907d589f279528b.so => not found
+    libsyntax_pos-610524479a0d36fa.so => not found
+    librustc_data_structures-b8a8de55dc5cd1ce.so => not found
+    libstd-0cfbe79f10411924.so => not found
+    libpthread.so.0 => /usr/lib/libpthread.so.0 (0x00007f2367625000)
+    libgcc_s.so.1 => /usr/lib/libgcc_s.so.1 (0x00007f236740e000)
+    libc.so.6 => /usr/lib/libc.so.6 (0x00007f2367057000)
+    libm.so.6 => /usr/lib/libm.so.6 (0x00007f2366d0b000)
+    /lib64/ld-linux-x86-64.so.2 => /usr/lib64/ld-linux-x86-64.so.2 (0x00007f2367c6f000)\n";
+
+        let parsed = parse_ldd_output(
+            &mut to_be_printed_string,
+            ldd_output,
+            "clippy-driver",
+            &clippy_crateinfo,
+        );
+        assert!(parsed.is_some());
+        let ci = parsed.unwrap();
+        // do some sanity checks
+        assert_eq!(ci.name, "clippy");
+        assert_eq!(ci.git, None,);
+        assert_eq!(ci.branch, None);
+        assert_eq!(ci.tag, None);
+        assert_eq!(ci.rev, None);
+        assert_eq!(ci.binaries, vec!["cargo-clippy", "clippy-driver"])
+    }
+
+    #[test]
+    fn package_does_not_need_rebuild() {
+        let clippy_line ="\"clippy 0.0.189 (registry+https://github.com/rust-lang/crates.io-index)\" = [\"cargo-clippy\", \"clippy-driver\"]";
+
+        let clippy_crateinfo = decode_line(&clippy_line);
+
+        let mut to_be_printed_string = "".to_string();
+        // clippy-driver
+        let ldd_output = "    linux-vdso.so.1 (0x00007ffec37d0000)
+librustc_driver-6516506ab0349d45.so => foo.so
+librustc_plugin-14c7fbb709ee1764.so => foo.so
+librustc_typeck-ca6d3c89de970134.so => foo.so
+librustc-6b0d6e07668228e2.so => foo.so
+libsyntax-5ece0a81ed6c5461.so => foo.so
+librustc_errors-7907d589f279528b.so => foo.so
+libsyntax_pos-610524479a0d36fa.so => foo.so
+librustc_data_structures-b8a8de55dc5cd1ce.so => foo.so
+libstd-0cfbe79f10411924.so => foo.so
+libpthread.so.0 => /usr/lib/libpthread.so.0 (0x00007f2367625000)
+libgcc_s.so.1 => /usr/lib/libgcc_s.so.1 (0x00007f236740e000)
+libc.so.6 => /usr/lib/libc.so.6 (0x00007f2367057000)
+libm.so.6 => /usr/lib/libm.so.6 (0x00007f2366d0b000)
+/lib64/ld-linux-x86-64.so.2 => /usr/lib64/ld-linux-x86-64.so.2 (0x00007f2367c6f000)\n";
+
+        let parsed = parse_ldd_output(
+            &mut to_be_printed_string,
+            ldd_output,
+            "clippy-driver",
+            &clippy_crateinfo,
+        );
+        assert!(parsed.is_none());
     }
 
 } // mod test
