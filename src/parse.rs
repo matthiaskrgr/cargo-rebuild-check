@@ -299,14 +299,46 @@ mod tests {
     }
 
     #[bench]
-    fn bench_line_simple(b: &mut Bencher) {
-        let line = "\"gitgc 0.1.0 (git+https://github.com/matthiaskrgr/gitgc#038fbf2cbfb0120cb2cb7960f713e3d80aa0b95f)\" = [\"gitgc\"]";
+    fn bench_decode_line_git_simple(b: &mut Bencher) {
+        let line = "\"cargo-cache 0.1.0 (git+http://github.com/matthiaskrgr/cargo-cache#6083f409343aeb8c7fcedd1877fd1ae4ef8c9e49)\" = [\"cargo-cache\"]";
         b.iter(|| decode_line(line))
     }
 
     #[bench]
-    fn bench_line_binaries(b: &mut Bencher) {
+    fn bench_decode_line_git_tag(b: &mut Bencher) {
+        let line = "\"ripgrep 0.8.0 (git+https://github.com/BurntSushi/ripgrep?tag=0.8.0#23d1b91eaddbfb886a3a99d615f49551cd35cb6c)\" = [\"rg\"]";
+        b.iter(|| decode_line(line))
+    }
+
+    #[bench]
+    fn bench_decode_line_git_branch(b: &mut Bencher) {
+        let line = "\"alacritty 0.1.0 (git+https://github.com/jwilm/alacritty/?branch=scrollback#9ee1cf2455d5512b087757e09451f9d122548da2)\" = [\"alacritty\"]";
+
+        b.iter(|| decode_line(line))
+    }
+
+    #[bench]
+    fn bench_decode_line_git_rev(b: &mut Bencher) {
+        let line = "\"cargo-rebuild-check 0.1.0 (git+https://github.com/matthiaskrgr/cargo-rebuild-check?rev=37a364d852f697612fede36546cbb31ef0265f08#37a364d852f697612fede36546cbb31ef0265f08)\" = [\"cargo-rebuild-check\"]";
+        b.iter(|| decode_line(line))
+    }
+
+    #[bench]
+    fn bench_decode_line_registry(b: &mut Bencher) {
+        let line = "\"mdbook 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)\" = [\"mdbook\"]";
+        b.iter(|| decode_line(line))
+    }
+
+    #[bench]
+    fn bench_decode_line_path(b: &mut Bencher) {
+        let line = "\"racer 2.0.12 (path+file:///tmp/racer)\" = [\"racer\"]";
+        b.iter(|| decode_line(line))
+    }
+
+    #[bench]
+    fn bench_decode_line_multiple_binaries(b: &mut Bencher) {
         let line = "\"rustfmt-nightly 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)\" = [\"cargo-fmt\", \"git-rustfmt\", \"rustfmt\", \"rustfmt-format-diff\"]";
         b.iter(|| decode_line(line))
     }
+
 } // mod test
