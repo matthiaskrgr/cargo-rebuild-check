@@ -262,6 +262,17 @@ mod tests {
     libm.so.6 => /usr/lib/libm.so.6 (0x00007f2366d0b000)
     /lib64/ld-linux-x86-64.so.2 => /usr/lib64/ld-linux-x86-64.so.2 (0x00007f2367c6f000)\n";
 
+        let our_formatted_output = "\n    Binary 'clippy-driver' is missing:
+\t\tlibrustc_driver-6516506ab0349d45.so
+\t\tlibrustc_plugin-14c7fbb709ee1764.so
+\t\tlibrustc_typeck-ca6d3c89de970134.so
+\t\tlibrustc-6b0d6e07668228e2.so
+\t\tlibsyntax-5ece0a81ed6c5461.so
+\t\tlibrustc_errors-7907d589f279528b.so
+\t\tlibsyntax_pos-610524479a0d36fa.so
+\t\tlibrustc_data_structures-b8a8de55dc5cd1ce.so
+\t\tlibstd-0cfbe79f10411924.so\n";
+
         let parsed = parse_ldd_output(
             &mut to_be_printed_string,
             ldd_output,
@@ -276,7 +287,9 @@ mod tests {
         assert_eq!(ci.branch, None);
         assert_eq!(ci.tag, None);
         assert_eq!(ci.rev, None);
-        assert_eq!(ci.binaries, vec!["cargo-clippy", "clippy-driver"])
+        assert_eq!(ci.binaries, vec!["cargo-clippy", "clippy-driver"]);
+        //rintln!("str: {}", to_be_printed_string);
+        assert_eq!(our_formatted_output, to_be_printed_string);
     }
 
     #[test]
@@ -310,6 +323,7 @@ libm.so.6 => /usr/lib/libm.so.6 (0x00007f2366d0b000)
             &clippy_crateinfo,
         );
         assert!(parsed.is_none());
+        assert!(to_be_printed_string.is_empty());
     }
 
     #[bench]
