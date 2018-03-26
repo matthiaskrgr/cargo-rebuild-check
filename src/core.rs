@@ -49,10 +49,23 @@ pub fn run_cargo_install(binary: &str, args: &[String], list_of_failures: &mut V
     }
 }
 
+fn check_bin_with_ldd(
+    binary_path: &str,
+    rustc_lib_path: &str,
+) -> Result<std::process::Output, std::io::Error> {
+    Command::new("ldd")
+        .arg(&binary_path)
+        .env("LD_LIBRARY_PATH", rustc_lib_path)
+        // try to enfore english output to stabilize parsing
+        .env("LANG", "en_US")
+        .env("LC_ALL", "en_US")
+        .output()
+}
+
 pub fn check_binary<'a>(
     package: &'a CrateInfo,
     bin_dir: &std::path::PathBuf,
-    rust_lib_path: &str,
+    rustc_lib_path: &str,
 ) -> Option<&'a CrateInfo> {
     let mut print_string =
         format!("  Checking crate {} {}", package.name, package.version).to_string();
@@ -62,14 +75,8 @@ pub fn check_binary<'a>(
         let mut bin_path: std::path::PathBuf = bin_dir.clone();
         bin_path.push(&binary);
         let binary_path = bin_path.into_os_string().into_string().unwrap();
-        match Command::new("ldd")
-            .arg(&binary_path)
-            .env("LD_LIBRARY_PATH", rust_lib_path)
-            // try to enfore english output to stabilize parsing
-            .env("LANG", "en_US")
-            .env("LC_ALL", "en_US")
-            .output()
-        {
+        let ldd_output = check_bin_with_ldd(&binary_path, &rustc_lib_path);
+        match ldd_output {
             Ok(out) => {
                 let output = String::from_utf8_lossy(&out.stdout).into_owned();
                 let mut first = true;
