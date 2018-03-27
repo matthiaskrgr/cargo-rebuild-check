@@ -22,7 +22,7 @@ use self::rayon::iter::*;
 use parse::*;
 
 pub fn run_cargo_install(binary: &str, args: &[String], list_of_failures: &mut Vec<String>) {
-    println!("Reinstalling {}", binary);
+    println!("  Reinstalling {}", binary);
     let mut cargo = Command::new("cargo");
     cargo.arg("install");
     cargo.arg(binary);
@@ -178,7 +178,6 @@ pub fn check_and_rebuild_broken_crates(
         println!("\n  Everything looks good! :)");
     }
     let mut list_of_failures: Vec<String> = Vec::new();
-
     // try to rebuild broken packages
     if rebuilds_required && do_auto_rebuild {
         // we need to find out if a package is a git package
@@ -228,7 +227,7 @@ pub fn check_and_rebuild_broken_crates(
         }
     }
     if !list_of_failures.is_empty() {
-        println!("Failed rebuilds: {}", list_of_failures.join(" "));
+        println!("    Failed rebuilds: {}", list_of_failures.join(" "));
     }
 }
 

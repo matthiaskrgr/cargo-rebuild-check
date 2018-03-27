@@ -55,6 +55,6 @@ fn main() {
         packages,
         &rust_lib_path,
         &bin_dir,
-        cfg.is_present("auto-build"),
+        cfg.is_present("auto-rebuild"),
     )
 }
