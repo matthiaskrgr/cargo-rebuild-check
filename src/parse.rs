@@ -106,8 +106,8 @@ pub fn decode_line(line: &str) -> self::CrateInfo {
 
     let line_split: Vec<&str> = line.split(' ').collect();
     let name = line_split[0].to_string().replace("\"", "");
-    let version = line_split[1].to_string();
-    let sourceinfo = line_split[2].to_string();
+    let version = line_split[1];
+    let sourceinfo = line_split[2];
     // sourceinfo tells us if we have a crates registy or git crate and what
     let sourceinfo = sourceinfo.replace("(", "").replace(")", "");
     let sourceinfo_split: Vec<&str> = sourceinfo.split('+').collect();
@@ -117,7 +117,7 @@ pub fn decode_line(line: &str) -> self::CrateInfo {
     addr.pop(); // remove last char which is \"
 
     package.name = name;
-    package.version = version;
+    package.version = version.to_string();
 
     match *kind {
         Some(&"registry") => package.registry = Some(addr),
