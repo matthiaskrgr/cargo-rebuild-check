@@ -61,7 +61,7 @@ mod tests {
         // do this similar to test_help
         // run a "cargo build", execute the binary with the PATH env var cleared
         // to prevent finding any binaries
-        // assert that we get a warning as output
+        // then assert that we get a warning as output
         let mut dir = std::env::current_dir().unwrap();
         let cargo_cmd = Command::new("cargo")
             .arg("build")

@@ -180,7 +180,7 @@ pub fn decode_line(line: &str) -> self::CrateInfo {
 
     // collect the binaries a crate has installed
 
-    // the line looks like this:
+    // the line looks like this:package
     // "rustfmt-nightly 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)" = ["cargo-fmt", "git-rustfmt", "rustfmt", "rustfmt-format-diff"]
     // split at the "=" and get everything after it
     let bins_split_from_line: Vec<&str> = line.split('=').collect();
