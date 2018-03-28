@@ -19,6 +19,7 @@ mod check_external_cmds;
 mod cli;
 mod core;
 mod parse;
+mod errors;
 
 use check_external_cmds::*;
 use cli::*;
@@ -29,7 +30,7 @@ use parse::*;
 
 fn main() {
     match all_binaries_available() {
-        Ok(_ok) => {}
+        Ok(_) => {}
         Err(missing_bins) => {
             eprintln!("Could not find the following binaries: '{}'", missing_bins);
             eprintln!("Please make them available in your $PATH.");

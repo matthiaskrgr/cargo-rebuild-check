@@ -17,6 +17,8 @@ extern crate test;
 use std::fs::File;
 use std::io::prelude::*;
 
+use errors::ErrorKind;
+
 // a package that we may need to rebuild
 #[derive(Debug)]
 pub struct CrateInfo {
@@ -31,17 +33,46 @@ pub struct CrateInfo {
     pub binaries: Vec<String>,
 }
 
-pub fn get_installed_crate_information() -> Vec<CrateInfo> {
-    let cargo_cfg = cargo::util::config::Config::default().unwrap();
+fn read_crates_toml() -> Result<String, ErrorKind> {
+    let cargo_cfg = match cargo::util::config::Config::default() {
+        Ok(cargo_cfg) => cargo_cfg,
+        Err(e) => {
+            eprintln!("{}", e);
+            return Err(ErrorKind::NoCargoHome);
+        }
+    };
 
     let mut crates_index = cargo_cfg.home().clone();
     crates_index.push(".crates.toml");
 
-    let mut f = File::open(crates_index.into_path_unlocked()).expect("file not found");
+    let crates_toml_path = crates_index.into_path_unlocked();
+
+    if !crates_toml_path.is_file() {
+        eprintln!("No .crates.toml");
+        return Err(ErrorKind::NoCratesToml);
+    }
+
+    let mut f = match File::open(crates_toml_path) {
+        Ok(f) => f,
+        Err(e) => {
+            eprintln!("{}", e);
+            return Err(ErrorKind::NotOpenCratesToml);
+        }
+    };
 
     let mut file_content = String::new();
-    f.read_to_string(&mut file_content)
-        .expect(&format!("Error: could not read '{}'", file_content));
+    match f.read_to_string(&mut file_content) {
+        Ok(_) => {}
+        Err(e) => {
+            eprintln!("{}", e);
+            return Err(ErrorKind::NoReadCratesToml);
+        }
+    }
+    Ok(file_content)
+}
+
+pub fn get_installed_crate_information() -> Vec<CrateInfo> {
+    let file_content = read_crates_toml().unwrap();
 
     let mut file_iter = file_content.lines().into_iter();
     // skip the first line when unwrapping
@@ -83,7 +114,7 @@ pub fn decode_line(line: &str) -> self::CrateInfo {
     let kind = &sourceinfo_split.first();
     let addr = &sourceinfo_split.last();
     let mut addr = addr.unwrap().to_string();
-    addr.pop(); // remove last char which is "
+    addr.pop(); // remove last char which is \"
 
     package.name = name;
     package.version = version;
