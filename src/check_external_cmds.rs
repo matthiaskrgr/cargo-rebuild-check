@@ -16,15 +16,16 @@ use std::string::String;
 fn has_binary(binary: &str) -> bool {
     // we need to grab the output so it does not spam in to program stdout
     // check if we can find the binary
+    // @TODO can we check that we don't get any output in stdout/stderr from this function?
     let _ = match Command::new(&binary)
         .env("LANG", "en_US")
         .env("LC_ALL", "en_US")
         .output()
     {
-        Ok(_ok) => {
+        Ok(_) => {
             return true;
         }
-        Err(_e) => {
+        Err(_) => {
             return false;
         }
     };
@@ -59,6 +60,7 @@ mod tests {
     fn no_binary_found() {
         // do this similar to test_help
         // run a "cargo build", execute the binary with the PATH env var cleared
+        // to prevent finding any binaries
         // assert that we get a warning as output
         let mut dir = std::env::current_dir().unwrap();
         let cargo_cmd = Command::new("cargo")
