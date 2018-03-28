@@ -51,7 +51,7 @@ pub fn get_installed_crate_information() -> Vec<CrateInfo> {
     let mut packages = Vec::new();
 
     for line in file_iter {
-        let package = decode_line(&line);
+        let package = decode_line(line);
         // collect the packages
         packages.push(package);
     } // for line in file_iter

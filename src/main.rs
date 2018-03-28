@@ -52,7 +52,7 @@ fn main() {
     let rust_lib_path = get_rustc_lib_path();
 
     check_and_rebuild_broken_crates(
-        packages,
+        &packages,
         &rust_lib_path,
         &bin_dir,
         cfg.is_present("auto-rebuild"),

@@ -58,15 +58,15 @@ fn check_bin_with_ldd(binary_path: &str, rustc_lib_path: &str) -> String {
         .env("LANG", "en_US")
         .env("LC_ALL", "en_US")
         .output();
-    let text = match result {
+
+    match result {
         Ok(out) => String::from_utf8_lossy(&out.stdout).into_owned(),
         Err(e) => {
             // something went wrong while running ldd
             eprintln!("Error while running ldd: '{}'", e);
             std::process::exit(3);
         }
-    }; // match
-    text
+    }
 }
 
 fn parse_ldd_output<'a>(
@@ -111,9 +111,9 @@ pub fn check_crate<'a>(
         let mut bin_path: std::path::PathBuf = bin_dir.clone();
         bin_path.push(&binary);
         let binary_path = bin_path.into_os_string().into_string().unwrap();
-        let ldd_result = check_bin_with_ldd(&binary_path, &rustc_lib_path);
+        let ldd_result = check_bin_with_ldd(&binary_path, rustc_lib_path);
 
-        outdated_package = parse_ldd_output(&mut output_string, &ldd_result, &binary, &package);
+        outdated_package = parse_ldd_output(&mut output_string, &ldd_result, binary, package);
     }
     println!("{}", &output_string);
     outdated_package
@@ -138,16 +138,14 @@ pub fn get_rustc_lib_path() -> String {
         Err(e) => panic!("Error getting rustc sysroot path '{}'", e),
     };
 
-    let rust_lib_path_string = rust_lib_path
+    rust_lib_path
         .into_os_string()
         .into_string()
-        .expect("Failed to convert pathBuf to String");
-
-    rust_lib_path_string
+        .expect("Failed to convert pathBuf to String")
 }
 
 pub fn check_and_rebuild_broken_crates(
-    packages: Vec<CrateInfo>,
+    packages: &[CrateInfo],
     rust_lib_path: &str,
     bin_dir: &std::path::PathBuf,
     do_auto_rebuild: bool,
@@ -158,7 +156,7 @@ pub fn check_and_rebuild_broken_crates(
     // todo: can we avoid sorting into a separate vector here?
     let broken_pkgs: Vec<&CrateInfo> = packages
         .par_iter()
-        .filter_map(|crate_| check_crate(crate_, &bin_dir, &rust_lib_path))
+        .filter_map(|crate_| check_crate(crate_, bin_dir, rust_lib_path))
         .collect();
 
     let rebuilds_required: bool = !broken_pkgs.is_empty();
