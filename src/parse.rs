@@ -71,13 +71,17 @@ fn read_crates_toml() -> Result<String, ErrorKind> {
     Ok(file_content)
 }
 
-pub fn get_installed_crate_information() -> Vec<CrateInfo> {
+pub fn get_installed_crate_information() -> Result<Vec<CrateInfo>, ErrorKind> {
     let file_content = read_crates_toml().unwrap();
 
     let mut file_iter = file_content.lines().into_iter();
     // skip the first line when unwrapping
     // the first line also tells the api version, so assert that we are sort of compatible
-    assert_eq!(file_iter.next().unwrap(), "[v1]", "Error: Api changed!");
+    let first_line = file_iter.next().unwrap().trim();
+    if first_line != "[v1]" {
+        eprintln!("Error: API changed!");
+        return Err(ErrorKind::UnknownAPI);
+    }
 
     let mut packages = Vec::new();
 
@@ -88,7 +92,7 @@ pub fn get_installed_crate_information() -> Vec<CrateInfo> {
     } // for line in file_iter
       // done reading in the file
 
-    packages
+    Ok(packages)
 }
 
 pub fn decode_line(line: &str) -> self::CrateInfo {

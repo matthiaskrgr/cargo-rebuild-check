@@ -47,7 +47,18 @@ fn main() {
     bin_dir.push("bin");
 
     // get vector of packages from parsed .crates.toml file
-    let packages = get_installed_crate_information();
+    let packages = match get_installed_crate_information() {
+        Ok(pkgs) => pkgs,
+        Err(error) => match error {
+            errors::ErrorKind::UnknownAPI => {
+                std::process::exit(2);
+            }
+            _ => {
+                eprintln!("bad error: {:?}", error);
+                std::process::exit(3);
+            }
+        },
+    };
 
     // get the path where rustc libs are stored: $(rustc --print sysroot)/lib
     let rust_lib_path = get_rustc_lib_path();
