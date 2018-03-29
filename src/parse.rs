@@ -337,6 +337,36 @@ mod tests {
         );
     }
 
+    #[test]
+    fn check_failure_on_invalid_api() {
+        let file_content = "[v2]
+\"afl 0.3.2 (registry+https://github.com/rust-lang/crates.io-index)\" = [\"cargo-afl\"]"
+            .to_string();
+        let file_result = Ok(file_content);
+        let parsed = get_installed_crate_information(file_result);
+        assert!(parsed.is_err());
+        match parsed {
+            Err(e) => {
+                assert_eq!(e, ErrorKind::UnknownAPI);
+            }
+            _ => unreachable!(),
+        }
+    }
+    #[test]
+    fn check_success_on_valid_api() {
+        let file_content = "[v1]
+\"afl 0.3.2 (registry+https://github.com/rust-lang/crates.io-index)\" = [\"cargo-afl\"]"
+            .to_string();
+        let file_result = Ok(file_content);
+        let parsed = get_installed_crate_information(file_result);
+        assert!(parsed.is_ok());
+        let parsed = parsed.unwrap();
+        assert_eq!(parsed.len(), 1);
+        let pkg = &parsed[0];
+        assert_eq!(pkg.name, "afl");
+        assert_eq!(pkg.version, "0.3.2");
+    }
+
     #[bench]
     fn bench_decode_line_git_simple(b: &mut Bencher) {
         let line = "\"cargo-cache 0.1.0 (git+http://github.com/matthiaskrgr/cargo-cache#6083f409343aeb8c7fcedd1877fd1ae4ef8c9e49)\" = [\"cargo-cache\"]";

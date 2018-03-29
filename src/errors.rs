@@ -10,7 +10,7 @@
 #![cfg_attr(feature = "cargo-clippy", warn(string_add, string_add_assign))]
 #![cfg_attr(feature = "cargo-clippy", warn(stutter))]
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum ErrorKind {
     NoCargoHome,
     NoCratesToml,
