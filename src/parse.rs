@@ -33,7 +33,7 @@ pub struct CrateInfo {
     pub binaries: Vec<String>,
 }
 
-fn read_crates_toml() -> Result<String, ErrorKind> {
+pub fn read_crates_toml() -> Result<String, ErrorKind> {
     let cargo_cfg = match cargo::util::config::Config::default() {
         Ok(cargo_cfg) => cargo_cfg,
         Err(e) => {
@@ -71,10 +71,13 @@ fn read_crates_toml() -> Result<String, ErrorKind> {
     Ok(file_content)
 }
 
-pub fn get_installed_crate_information() -> Result<Vec<CrateInfo>, ErrorKind> {
-    let file_content = read_crates_toml().unwrap();
+pub fn get_installed_crate_information(
+    file_content: Result<String, ErrorKind>,
+) -> Result<Vec<CrateInfo>, ErrorKind> {
+    //let file_content = read_crates_toml().unwrap();
+    let file = file_content.unwrap();
 
-    let mut file_iter = file_content.lines().into_iter();
+    let mut file_iter = file.lines().into_iter();
     // skip the first line when unwrapping
     // the first line also tells the api version, so assert that we are sort of compatible
     let first_line = file_iter.next().unwrap().trim();

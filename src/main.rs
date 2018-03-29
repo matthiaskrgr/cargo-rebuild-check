@@ -47,7 +47,9 @@ fn main() {
     bin_dir.push("bin");
 
     // get vector of packages from parsed .crates.toml file
-    let packages = match get_installed_crate_information() {
+
+    let file = read_crates_toml();
+    let packages = match get_installed_crate_information(file) {
         Ok(pkgs) => pkgs,
         Err(error) => match error {
             errors::ErrorKind::UnknownAPI => {
