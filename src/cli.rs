@@ -20,20 +20,27 @@ pub fn gen_clap<'a>() -> ArgMatches<'a> {
         .long("auto")
         .help("Try to automatically reinstall broken crates");
 
+    let rebuild_all = Arg::with_name("rebuild-all")
+        .short("r")
+        .long("rebuild-all")
+        .help("Rebuild all installed crates unconditionally");
+
     App::new("cargo-rebuild-check")
         .version(crate_version!())
         .bin_name("cargo")
-        .about("find installed crates that need rebuild due to broken library links")
+        .about("Find installed crates that need rebuild due to broken library links")
         .author("matthiaskrgr")
         .subcommand(
             SubCommand::with_name("rebuild-check")
                 .version(crate_version!())
                 .bin_name("cargo-rebuild-check")
-                .about("find installed crates that need rebuild due to broken library links")
+                .about("Find installed crates that need rebuild due to broken library links")
                 .author("matthiaskrgr")
-                .arg(&auto_rebuild),
+                .arg(&auto_rebuild)
+                .arg(&rebuild_all)
         ) // subcommand
         .arg(&auto_rebuild)
+        .arg(&rebuild_all)
         .get_matches()
 }
 
@@ -70,16 +77,17 @@ mod tests {
         let output = String::from_utf8_lossy(&crc_cmd.stdout);
         let help_text = "cargo-rebuild-check 0.1.0
 matthiaskrgr
-find installed crates that need rebuild due to broken library links\n
+Find installed crates that need rebuild due to broken library links\n
 USAGE:
     cargo [FLAGS] [SUBCOMMAND]\n
 FLAGS:
-    -a, --auto       Try to automatically reinstall broken crates
-    -h, --help       Prints help information
-    -V, --version    Prints version information\n
+    -a, --auto           Try to automatically reinstall broken crates
+    -h, --help           Prints help information
+    -r, --rebuild-all    Rebuild all installed crates unconditionally
+    -V, --version        Prints version information\n
 SUBCOMMANDS:
     help             Prints this message or the help of the given subcommand(s)
-    rebuild-check    find installed crates that need rebuild due to broken library links\n";
+    rebuild-check    Find installed crates that need rebuild due to broken library links\n";
         assert_eq!(output, help_text);
     }
 

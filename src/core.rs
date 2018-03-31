@@ -102,6 +102,7 @@ pub fn check_crate<'a>(
     package: &'a CrateInfo,
     bin_dir: &std::path::PathBuf,
     rustc_lib_path: &str,
+    rebuild_all: bool,
 ) -> Option<&'a CrateInfo> {
     let mut output_string =
         format!("  Checking crate {} {}", package.name, package.version).to_string();
@@ -112,8 +113,11 @@ pub fn check_crate<'a>(
         bin_path.push(&binary);
         let binary_path = bin_path.into_os_string().into_string().unwrap();
         let ldd_result = check_bin_with_ldd(&binary_path, rustc_lib_path);
-
-        outdated_package = parse_ldd_output(&mut output_string, &ldd_result, binary, package);
+        if rebuild_all {
+            outdated_package = Some(package);
+        } else {
+            outdated_package = parse_ldd_output(&mut output_string, &ldd_result, binary, package);
+        }
     }
     println!("{}", &output_string);
     outdated_package
@@ -149,6 +153,7 @@ pub fn check_and_rebuild_broken_crates(
     rust_lib_path: &str,
     bin_dir: &std::path::PathBuf,
     do_auto_rebuild: bool,
+    rebuild_all: bool,
 ) {
     // iterate (in parallel) over the acquired metadata and check for broken library links
     // filter out all None values, only collect the Some() ones
@@ -156,28 +161,32 @@ pub fn check_and_rebuild_broken_crates(
     // todo: can we avoid sorting into a separate vector here?
     let broken_pkgs: Vec<&CrateInfo> = packages
         .par_iter()
-        .filter_map(|crate_| check_crate(crate_, bin_dir, rust_lib_path))
+        .filter_map(|crate_| check_crate(crate_, bin_dir, rust_lib_path, rebuild_all))
         .collect();
 
     let rebuilds_required: bool = !broken_pkgs.is_empty();
 
     if rebuilds_required {
         // concat list of names of crates needing rebuilding
-        let mut pkgs_string = String::new();
-        for pkg in &broken_pkgs {
-            pkgs_string.push_str(&pkg.name);
-            pkgs_string.push_str(" ");
-        }
-        println!("\n  Crates needing rebuild: {}", pkgs_string.trim());
-        if !do_auto_rebuild {
-            std::process::exit(2);
+        if !rebuild_all {
+            let mut pkgs_string = String::new();
+            for pkg in &broken_pkgs {
+                pkgs_string.push_str(&pkg.name);
+                pkgs_string.push_str(" ");
+            }
+
+            println!("\n  Crates needing rebuild: {}", pkgs_string.trim());
+        } else {
+            println!("\n  Rebuilding all installed crates as requested.");
         }
     } else {
         println!("\n  Everything looks good! :)");
+        std::process::exit(0);
     }
+
     let mut list_of_failures: Vec<String> = Vec::new();
     // try to rebuild broken packages
-    if rebuilds_required && do_auto_rebuild {
+    if rebuilds_required || do_auto_rebuild {
         // we need to find out if a package is a git package
         for pkg in broken_pkgs {
             let mut cargo_args: Vec<String> = Vec::new();

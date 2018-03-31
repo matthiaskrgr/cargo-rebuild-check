@@ -70,5 +70,6 @@ fn main() {
         &rust_lib_path,
         &bin_dir,
         cfg.is_present("auto-rebuild"),
+        cfg.is_present("rebuild-all"),
     )
 }
