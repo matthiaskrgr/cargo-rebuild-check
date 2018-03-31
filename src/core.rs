@@ -235,6 +235,7 @@ pub fn check_and_rebuild_broken_crates(
     }
     if !list_of_failures.is_empty() {
         println!("    Failed rebuilds: {}", list_of_failures.join(" "));
+        std::process::exit(4);
     }
 }
 
