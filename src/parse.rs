@@ -74,7 +74,6 @@ pub fn read_crates_toml() -> Result<String, ErrorKind> {
 pub fn get_installed_crate_information(
     file_content: Result<String, ErrorKind>,
 ) -> Result<Vec<CrateInfo>, ErrorKind> {
-    //let file_content = read_crates_toml().unwrap();
     let file = file_content.unwrap();
 
     let mut file_iter = file.lines().into_iter();
@@ -115,7 +114,7 @@ pub fn decode_line(line: &str) -> self::CrateInfo {
     let name = line_split[0].to_string().replace("\"", "");
     let version = line_split[1];
     let sourceinfo = line_split[2];
-    // sourceinfo tells us if we have a crates registy or git crate and what
+    // sourceinfo tells us if we have a crates registy or git crate
     let sourceinfo = sourceinfo.replace("(", "").replace(")", "");
     let sourceinfo_split: Vec<&str> = sourceinfo.split('+').collect();
     let kind = &sourceinfo_split.first();
@@ -134,7 +133,7 @@ pub fn decode_line(line: &str) -> self::CrateInfo {
             let mut repo = split.next().unwrap();
             // rev does not matter unless we have "?rev="
             // cargo-update v1.4.1 (https://github.com/nabijaczleweli/cargo-update/?rev=ab82e070aaf4755fc38d15ca7d58acf4b697731d#ab82e070):
-            //
+
             let has_explicit_rev: bool = repo.contains("?rev=");
             let has_explicit_tag: bool = repo.contains("?tag=");
             let has_explicit_branch: bool = repo.contains("?branch=");
