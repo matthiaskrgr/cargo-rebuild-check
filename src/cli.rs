@@ -12,7 +12,7 @@
 
 extern crate test;
 
-use clap::{App, Arg, ArgMatches, SubCommand};
+use clap::{App, AppSettings, Arg, ArgMatches, SubCommand};
 
 pub fn gen_clap<'a>() -> ArgMatches<'a> {
     let auto_rebuild = Arg::with_name("auto-rebuild")
@@ -38,6 +38,7 @@ pub fn gen_clap<'a>() -> ArgMatches<'a> {
                 .author("matthiaskrgr")
                 .arg(&auto_rebuild)
                 .arg(&rebuild_all)
+                .setting(AppSettings::Hidden) // hide subcommand from --help
         ) // subcommand
         .arg(&auto_rebuild)
         .arg(&rebuild_all)
@@ -79,15 +80,12 @@ mod tests {
 matthiaskrgr
 Find installed crates that need rebuild due to broken library links\n
 USAGE:
-    cargo [FLAGS] [SUBCOMMAND]\n
+    cargo [FLAGS]\n
 FLAGS:
     -a, --auto           Try to automatically reinstall broken crates
     -h, --help           Prints help information
     -r, --rebuild-all    Rebuild all installed crates unconditionally
-    -V, --version        Prints version information\n
-SUBCOMMANDS:
-    help             Prints this message or the help of the given subcommand(s)
-    rebuild-check    Find installed crates that need rebuild due to broken library links\n";
+    -V, --version        Prints version information\n";
         assert_eq!(output, help_text);
     }
 
