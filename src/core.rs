@@ -186,7 +186,7 @@ pub fn check_and_rebuild_broken_crates(
 
     let mut list_of_failures: Vec<String> = Vec::new();
     // try to rebuild broken packages
-    if rebuilds_required || do_auto_rebuild {
+    if rebuilds_required && (do_auto_rebuild || rebuild_all) {
         // we need to find out if a package is a git package
         for pkg in broken_pkgs {
             let mut cargo_args: Vec<String> = Vec::new();
