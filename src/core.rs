@@ -157,10 +157,10 @@ pub fn check_and_rebuild_broken_crates(
     // iterate (in parallel) over the acquired metadata and check for broken library links
     // filter out all None values, only collect the Some() ones
 
-    // todo: can we avoid sorting into a separate vector here?
+    #[allow(non_snake_case)]
     let broken_pkgs: Vec<&CrateInfo> = packages
         .par_iter()
-        .filter_map(|crate_| check_crate(crate_, bin_dir, rust_lib_path, rebuild_all))
+        .filter_map(|Crate| check_crate(Crate, bin_dir, rust_lib_path, rebuild_all))
         .collect();
 
     let rebuilds_required: bool = !broken_pkgs.is_empty();
