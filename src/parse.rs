@@ -171,7 +171,10 @@ pub fn decode_line(line: &str) -> self::CrateInfo {
             package.path = Some(addr.to_string().replace("file://", ""));
         }
         Some(&&_) => {
-            let string: &str = &format!("Unknown sourceinfo kind '{:?}', please file bug!", kind);
+            let string: &str = &format!(
+                "Unknown sourceinfo kind '{:?}', please file bug ticket!",
+                kind
+            );
             eprintln!("{}", string);
             panic!();
         }
@@ -186,7 +189,7 @@ pub fn decode_line(line: &str) -> self::CrateInfo {
 
     // collect the binaries a crate has installed
 
-    // the line looks like this:package
+    // the line looks like this:
     // "rustfmt-nightly 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)" = ["cargo-fmt", "git-rustfmt", "rustfmt", "rustfmt-format-diff"]
     // split at the "=" and get everything after it
     let bins_split_from_line: Vec<&str> = line.split('=').collect();
@@ -205,8 +208,8 @@ pub fn decode_line(line: &str) -> self::CrateInfo {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use self::test::Bencher;
+    use super::*;
 
     #[test]
     fn decode_line_git_simple() {
