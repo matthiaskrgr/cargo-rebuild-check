@@ -14,21 +14,16 @@ use std::process::Command;
 use std::string::String;
 
 fn has_binary(binary: &str) -> bool {
-    // we need to grab the output so it does not spam in to program stdout
     // check if we can find the binary
-    // @TODO can we check that we don't get any output in stdout/stderr from this function?
-    let _ = match Command::new(&binary)
+    // @TODO can we assert that we don't get any output in stdout/stderr from this function?
+    match Command::new(&binary)
         .env("LANG", "en_US")
         .env("LC_ALL", "en_US")
         .output()
     {
-        Ok(_) => {
-            return true;
-        }
-        Err(_) => {
-            return false;
-        }
-    };
+        Ok(_) => true,
+        Err(_) => false,
+    }
 }
 
 pub fn all_binaries_available() -> Result<bool, String> {
