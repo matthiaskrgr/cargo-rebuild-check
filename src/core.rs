@@ -28,14 +28,13 @@ pub fn run_cargo_install<'a>(binary: &'a str, args: &[&str], list_of_failures: &
     cargo.arg(binary);
     cargo.arg("--force");
     for argument in args {
-        // don't pass empty argument to cargo
+        // don't pass empty argument to cargo as this used to crash it
         if !argument.is_empty() {
             cargo.arg(argument);
         }
     }
 
-    let cargo_status = cargo.status();
-    match cargo_status {
+    match cargo.status() {
         Ok(status) => {
             // bad exit status of cargo, build failed?
             if !status.success() {
@@ -60,7 +59,10 @@ fn check_bin_with_ldd(binary_path: &str, rustc_lib_path: &str) -> String {
         .output();
 
     match result {
-        Ok(out) => String::from_utf8_lossy(&out.stdout).into_owned(),
+        Ok(out) => {
+            // string is passed to parse_ldd_output()
+            String::from_utf8_lossy(&out.stdout).into_owned()
+        }
         Err(e) => {
             // something went wrong while running ldd
             eprintln!("Error while running ldd: '{}'", e);
@@ -75,12 +77,19 @@ fn parse_ldd_output<'a>(
     binary: &str,
     package: &'a CrateInfo,
 ) -> Option<&'a CrateInfo> {
+    // receive the output of ldd, parse it, print information on missing libraries to stderr
+    // and mark the crate as outdated if it is
+
     // assume package is not outdated
     let mut outdated_package: Option<&CrateInfo> = None;
 
+    // we need to know if this is the first missing lib of a binary when making our output string
+    // @TODO: only print some parts to stdout and some to stderr
     let output = ldd_result;
+
     let mut first = true;
     for line in output.lines() {
+        // is binary missing a library?
         if line.ends_with("=> not found") {
             if first {
                 // we found a broken link, assume package is outdated
