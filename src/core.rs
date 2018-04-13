@@ -199,6 +199,7 @@ pub fn check_and_rebuild_broken_crates(
     if rebuilds_required && (do_auto_rebuild || rebuild_all) {
         // we need to find out if a package is a git package
         for pkg in broken_pkgs {
+            // read the line saved in .crates.toml and find out the according "cargo install" flags
             let mut cargo_args: Vec<&str> = Vec::new();
             match pkg.git {
                 Some(ref git_repo_addr) => {
@@ -210,7 +211,6 @@ pub fn check_and_rebuild_broken_crates(
                         cargo_args.push("--branch");
                         cargo_args.push(branch);
                     }
-
                     if let Some(ref tag) = pkg.tag {
                         cargo_args.push("--tag");
                         cargo_args.push(tag);
