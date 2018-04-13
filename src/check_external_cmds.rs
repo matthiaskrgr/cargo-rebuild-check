@@ -38,6 +38,7 @@ pub fn all_binaries_available() -> Result<bool, String> {
     if !has_binary("cargo") {
         missing_bins.push_str(" cargo");
     }
+    // remove excess whitespaces
     missing_bins.trim();
 
     if missing_bins.is_empty() {

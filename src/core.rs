@@ -116,14 +116,16 @@ pub fn check_crate<'a>(
     let mut output_string = format!("  Checking crate {} {}", package.name, package.version);
 
     let mut outdated_package: Option<&CrateInfo> = None;
+
     for binary in &package.binaries {
-        let mut bin_path: std::path::PathBuf = bin_dir.clone();
-        bin_path.push(&binary);
-        let binary_path = bin_path.into_os_string().into_string().unwrap();
-        let ldd_result = check_bin_with_ldd(&binary_path, rustc_lib_path);
         if rebuild_all {
+            // rebuild unconditionally
             outdated_package = Some(package);
         } else {
+            let mut bin_path: std::path::PathBuf = bin_dir.clone();
+            bin_path.push(&binary);
+            let binary_path = bin_path.into_os_string().into_string().unwrap();
+            let ldd_result = check_bin_with_ldd(&binary_path, rustc_lib_path);
             outdated_package = parse_ldd_output(&mut output_string, &ldd_result, binary, package);
         }
     }
@@ -249,8 +251,8 @@ pub fn check_and_rebuild_broken_crates(
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use self::test::Bencher;
+    use super::*;
 
     #[test]
     fn package_needs_rebuild() {
