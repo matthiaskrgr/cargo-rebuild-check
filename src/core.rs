@@ -21,6 +21,20 @@ use self::rayon::iter::*;
 
 use parse::*;
 
+struct Output {
+    stdout: String,
+    stderr: String,
+}
+
+impl Output {
+    fn new() -> Output {
+        Output {
+            stdout: String::new(),
+            stderr: String::new(),
+        }
+    }
+}
+
 pub fn run_cargo_install<'a>(binary: &'a str, args: &[&str], list_of_failures: &mut Vec<&'a str>) {
     println!("  Reinstalling {}", binary);
     let mut cargo = Command::new("cargo");
@@ -72,7 +86,7 @@ fn check_bin_with_ldd(binary_path: &str, rustc_lib_path: &str) -> String {
 }
 
 fn parse_ldd_output<'a>(
-    output_string: &mut String,
+    output_string: &mut Output,
     ldd_result: &str,
     binary: &str,
     package: &'a CrateInfo,
@@ -84,7 +98,6 @@ fn parse_ldd_output<'a>(
     let mut outdated_package: Option<&CrateInfo> = None;
 
     // we need to know if this is the first missing lib of a binary when making our output string
-    // @TODO: only print some parts to stdout and some to stderr
     let output = ldd_result;
 
     let mut first = true;
@@ -94,9 +107,11 @@ fn parse_ldd_output<'a>(
             if first {
                 // we found a broken link, assume package is outdated
                 outdated_package = Some(package);
-                output_string.push_str(&format!("\n    Binary '{}' is missing:\n", &binary));
+                output_string
+                    .stderr
+                    .push_str(&format!("\n    Binary '{}' is missing:\n", &binary));
             }
-            output_string.push_str(&format!(
+            output_string.stderr.push_str(&format!(
                 "\t\t{}\n",
                 line.replace("=> not found", "").trim()
             ));
@@ -113,7 +128,12 @@ pub fn check_crate<'a>(
     rustc_lib_path: &str,
     rebuild_all: bool,
 ) -> Option<&'a CrateInfo> {
-    let mut output_string = format!("  Checking crate {} {}", package.name, package.version);
+    let mut output_string = Output::new();
+
+    output_string.stdout.push_str(&format!(
+        "  Checking crate {} {}",
+        package.name, package.version
+    ));
 
     let mut outdated_package: Option<&CrateInfo> = None;
 
@@ -129,7 +149,14 @@ pub fn check_crate<'a>(
             outdated_package = parse_ldd_output(&mut output_string, &ldd_result, binary, package);
         }
     }
-    println!("{}", &output_string);
+    // print to stdout/stderr respectively
+    // don't print empty lines!
+    if !output_string.stdout.is_empty() {
+        println!("{}", &output_string.stdout);
+    }
+    if !output_string.stderr.is_empty() {
+        eprintln!("{}", &output_string.stderr);
+    }
     outdated_package
 }
 
@@ -260,7 +287,7 @@ mod tests {
 
         let clippy_crateinfo = decode_line(&clippy_line);
 
-        let mut to_be_printed_string = "".to_string();
+        let mut to_be_printed_string = Output::new();
         // clippy-driver
         let ldd_output = "    linux-vdso.so.1 (0x00007ffec37d0000)
     librustc_driver-6516506ab0349d45.so => not found
@@ -305,7 +332,7 @@ mod tests {
         assert_eq!(ci.rev, None);
         assert_eq!(ci.binaries, vec!["cargo-clippy", "clippy-driver"]);
         //rintln!("str: {}", to_be_printed_string);
-        assert_eq!(our_formatted_output, to_be_printed_string);
+        assert_eq!(our_formatted_output, to_be_printed_string.stderr);
     }
 
     #[test]
@@ -314,7 +341,7 @@ mod tests {
 
         let clippy_crateinfo = decode_line(&clippy_line);
 
-        let mut to_be_printed_string = "".to_string();
+        let mut to_be_printed_string = Output::new();
         // clippy-driver
         let ldd_output = "    linux-vdso.so.1 (0x00007ffec37d0000)
 librustc_driver-6516506ab0349d45.so => foo.so
@@ -339,7 +366,7 @@ libm.so.6 => /usr/lib/libm.so.6 (0x00007f2366d0b000)
             &clippy_crateinfo,
         );
         assert!(parsed.is_none());
-        assert!(to_be_printed_string.is_empty());
+        assert!(to_be_printed_string.stderr.is_empty());
     }
 
     #[bench]
@@ -348,7 +375,7 @@ libm.so.6 => /usr/lib/libm.so.6 (0x00007f2366d0b000)
 
         let clippy_crateinfo = decode_line(&clippy_line);
 
-        let mut to_be_printed_string = "".to_string();
+        let mut to_be_printed_string = Output::new();
         // clippy-driver
         let ldd_output = "    linux-vdso.so.1 (0x00007ffec37d0000)
 librustc_driver-6516506ab0349d45.so => foo.so
@@ -382,7 +409,7 @@ libm.so.6 => /usr/lib/libm.so.6 (0x00007f2366d0b000)
 
         let clippy_crateinfo = decode_line(&clippy_line);
 
-        let mut to_be_printed_string = "".to_string();
+        let mut to_be_printed_string = Output::new();
         // clippy-driver
         let ldd_output = "    linux-vdso.so.1 (0x00007ffec37d0000)
             librustc_driver-6516506ab0349d45.so => not found
