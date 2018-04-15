@@ -109,7 +109,7 @@ fn parse_ldd_output<'a>(
                 outdated_package = Some(package);
                 output_string
                     .stderr
-                    .push_str(&format!("\n    Binary '{}' is missing:\n", &binary));
+                    .push_str(&format!("    Binary '{}' is missing:\n", &binary));
             }
             output_string.stderr.push_str(&format!(
                 "\t\t{}\n",
@@ -131,7 +131,7 @@ pub fn check_crate<'a>(
     let mut output_string = Output::new();
 
     output_string.stdout.push_str(&format!(
-        "  Checking crate {} {}",
+        "  Checking crate {} {}\n",
         package.name, package.version
     ));
 
@@ -152,10 +152,10 @@ pub fn check_crate<'a>(
     // print to stdout/stderr respectively
     // don't print empty lines!
     if !output_string.stdout.is_empty() {
-        println!("{}", &output_string.stdout);
+        print!("{}", &output_string.stdout);
     }
     if !output_string.stderr.is_empty() {
-        eprintln!("{}", &output_string.stderr);
+        eprint!("{}", &output_string.stderr);
     }
     outdated_package
 }
@@ -305,7 +305,7 @@ mod tests {
     libm.so.6 => /usr/lib/libm.so.6 (0x00007f2366d0b000)
     /lib64/ld-linux-x86-64.so.2 => /usr/lib64/ld-linux-x86-64.so.2 (0x00007f2367c6f000)\n";
 
-        let our_formatted_output = "\n    Binary 'clippy-driver' is missing:
+        let our_formatted_output = "    Binary 'clippy-driver' is missing:
 \t\tlibrustc_driver-6516506ab0349d45.so
 \t\tlibrustc_plugin-14c7fbb709ee1764.so
 \t\tlibrustc_typeck-ca6d3c89de970134.so
