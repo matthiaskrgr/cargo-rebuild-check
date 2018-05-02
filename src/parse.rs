@@ -110,14 +110,14 @@ pub fn decode_line(line: &str) -> self::CrateInfo {
         binaries: vec![],
     };
 
-    let line_split: Vec<&str> = line.split(' ').collect();
-    let name = line_split[0].to_string().replace("\"", "");
-    let version = line_split[1];
-    let sourceinfo = line_split[2];
+    let mut line_split = line.split_whitespace();
+    let name = line_split.next().unwrap().to_string().replace("\"", "");
+    let version = line_split.next().unwrap();
+    let sourceinfo = line_split.next().unwrap();
     // sourceinfo tells us if we have a crates registy or git crate
     let sourceinfo = sourceinfo.replace("(", "").replace(")", "");
-    let sourceinfo_split: Vec<&str> = sourceinfo.split('+').collect();
-    let kind = &sourceinfo_split.first();
+    let mut sourceinfo_split = sourceinfo.split('+');
+    let kind = &sourceinfo_split.next();
     let addr = &sourceinfo_split.last();
     let mut addr = addr.unwrap().to_string();
     addr.pop(); // remove last char which is \"
@@ -126,8 +126,8 @@ pub fn decode_line(line: &str) -> self::CrateInfo {
     package.version = version.to_string();
 
     match *kind {
-        Some(&"registry") => package.registry = Some(addr),
-        Some(&"git") => {
+        Some("registry") => package.registry = Some(addr),
+        Some("git") => {
             // cargo-rebuild-check v0.1.0 (https://github.com/matthiaskrgr/cargo-rebuild-check#2ce1ed0b):
             let mut split = addr.split('#');
             let mut repo = split.next().unwrap();
@@ -166,11 +166,11 @@ pub fn decode_line(line: &str) -> self::CrateInfo {
             let repo_url = repo.split('?').nth(0).unwrap();
             package.git = Some(repo_url.to_string());
         }
-        Some(&"path") => {
+        Some("path") => {
             // try to make the path absolute (file:///home/....  -> /home/....)
             package.path = Some(addr.to_string().replace("file://", ""));
         }
-        Some(&&_) => {
+        Some(&_) => {
             let string: &str = &format!(
                 "Unknown sourceinfo kind '{:?}', please file bug ticket!",
                 kind
