@@ -192,7 +192,7 @@ pub fn decode_line(line: &str) -> self::CrateInfo {
     // the line looks like this:
     // "rustfmt-nightly 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)" = ["cargo-fmt", "git-rustfmt", "rustfmt", "rustfmt-format-diff"]
     // split at the "=" and get everything after it
-    let bins_split_from_line: Vec<&str> = line.split('=').collect();
+    let bins_split_from_line = line.split('=');
     let bins = bins_split_from_line.last().unwrap();
     for bin in bins.split(',') {
         // clean up, remove characters remaining from toml encoding
