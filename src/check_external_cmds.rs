@@ -12,6 +12,7 @@
 
 use std::process::Command;
 use std::string::String;
+use std::env;
 
 fn has_binary(binary: &str) -> bool {
     // check if we can find the binary
@@ -26,13 +27,28 @@ fn has_binary(binary: &str) -> bool {
     }
 }
 
+pub fn get_rustc() -> String {
+    match env::var_os("RUSTC") {
+        Some(rustc) => {
+            let x = rustc.into_string().unwrap();
+            x
+        }
+        None => {
+            String::from("rustc")
+        }
+    }
+}
+
 pub fn all_binaries_available() -> Result<bool, String> {
     // we need ldd, rustc and cargo
     let mut missing_bins = String::new();
     if !has_binary("ldd") {
         missing_bins.push_str("ldd");
     }
-    if !has_binary("rustc") {
+
+    let rustc = get_rustc();
+
+    if !has_binary(&rustc) {
         missing_bins.push_str(" rustc");
     }
     if !has_binary("cargo") {

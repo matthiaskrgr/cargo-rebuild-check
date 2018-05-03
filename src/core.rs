@@ -20,6 +20,7 @@ use std::process::Command;
 use self::rayon::iter::*;
 
 use parse::*;
+use check_external_cmds::*;
 
 struct Output {
     stdout: String,
@@ -161,7 +162,8 @@ pub fn check_crate<'a>(
 }
 
 pub fn get_rustc_lib_path() -> String {
-    let rust_lib_path = match Command::new("rustc")
+    let rustc = get_rustc();
+    let rust_lib_path = match Command::new(&rustc)
         .arg("--print")
         .arg("sysroot")
         .env("LANG", "en_US")
