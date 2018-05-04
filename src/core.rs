@@ -19,8 +19,8 @@ use std::process::Command;
 
 use self::rayon::iter::*;
 
-use parse::*;
 use check_external_cmds::*;
+use parse::*;
 
 struct Output {
     stdout: String,

@@ -10,9 +10,9 @@
 #![cfg_attr(feature = "cargo-clippy", warn(string_add, string_add_assign))]
 #![cfg_attr(feature = "cargo-clippy", warn(stutter))]
 
+use std::env;
 use std::process::Command;
 use std::string::String;
-use std::env;
 
 fn has_binary(binary: &str) -> bool {
     // check if we can find the binary
@@ -29,13 +29,8 @@ fn has_binary(binary: &str) -> bool {
 
 pub fn get_rustc() -> String {
     match env::var_os("RUSTC") {
-        Some(rustc) => {
-            let x = rustc.into_string().unwrap();
-            x
-        }
-        None => {
-            String::from("rustc")
-        }
+        Some(rustc) => rustc.into_string().unwrap(),
+        None => String::from("rustc"),
     }
 }
 
