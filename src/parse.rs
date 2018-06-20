@@ -196,7 +196,8 @@ pub fn decode_line(line: &str) -> self::CrateInfo {
     let bins = bins_split_from_line.last().unwrap();
     for bin in bins.split(',') {
         // clean up, remove characters remaining from toml encoding
-        let binary: String = bin.replace("[", "")
+        let binary: String = bin
+            .replace("[", "")
             .replace("]", "")
             .replace("\"", "")
             .trim()
