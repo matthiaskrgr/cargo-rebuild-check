@@ -10,6 +10,8 @@
 #![cfg_attr(feature = "cargo-clippy", warn(range_plus_one))]
 #![cfg_attr(feature = "cargo-clippy", warn(string_add, string_add_assign))]
 #![cfg_attr(feature = "cargo-clippy", warn(stutter))]
+#![cfg_attr(feature = "cargo-clippy", warn(needless_borrow))]
+
 
 extern crate cargo;
 #[macro_use]
