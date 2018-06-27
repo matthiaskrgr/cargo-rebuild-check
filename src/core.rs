@@ -289,7 +289,7 @@ mod tests {
     fn package_needs_rebuild() {
         let clippy_line ="\"clippy 0.0.189 (registry+https://github.com/rust-lang/crates.io-index)\" = [\"cargo-clippy\", \"clippy-driver\"]";
 
-        let clippy_crateinfo = decode_line(&clippy_line);
+        let clippy_crateinfo = decode_line(clippy_line);
 
         let mut to_be_printed_string = Output::new();
         // clippy-driver
@@ -343,7 +343,7 @@ mod tests {
     fn package_does_not_need_rebuild() {
         let clippy_line ="\"clippy 0.0.189 (registry+https://github.com/rust-lang/crates.io-index)\" = [\"cargo-clippy\", \"clippy-driver\"]";
 
-        let clippy_crateinfo = decode_line(&clippy_line);
+        let clippy_crateinfo = decode_line(clippy_line);
 
         let mut to_be_printed_string = Output::new();
         // clippy-driver
@@ -377,7 +377,7 @@ libm.so.6 => /usr/lib/libm.so.6 (0x00007f2366d0b000)
     fn bench_decode_ldd_output_all_libs_found(b: &mut Bencher) {
         let clippy_line ="\"clippy 0.0.189 (registry+https://github.com/rust-lang/crates.io-index)\" = [\"cargo-clippy\", \"clippy-driver\"]";
 
-        let clippy_crateinfo = decode_line(&clippy_line);
+        let clippy_crateinfo = decode_line(clippy_line);
 
         let mut to_be_printed_string = Output::new();
         // clippy-driver
@@ -411,7 +411,7 @@ libm.so.6 => /usr/lib/libm.so.6 (0x00007f2366d0b000)
     fn bench_decode_ldd_output_some_libs_not_found(b: &mut Bencher) {
         let clippy_line ="\"clippy 0.0.189 (registry+https://github.com/rust-lang/crates.io-index)\" = [\"cargo-clippy\", \"clippy-driver\"]";
 
-        let clippy_crateinfo = decode_line(&clippy_line);
+        let clippy_crateinfo = decode_line(clippy_line);
 
         let mut to_be_printed_string = Output::new();
         // clippy-driver
