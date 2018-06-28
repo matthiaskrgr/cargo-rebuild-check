@@ -5,9 +5,9 @@ authors = ["Matthias Krüger <matthias.krueger@famsik.de>"]
 
 [dependencies]
 # https://github.com/rust/cargo
-cargo = "0.27" # get CARGO_HOME
+cargo = "0.28" # get CARGO_HOME
 rayon = "1.0" # parallelize
-clap = "2.31" # CLI parsing
+clap = "2.32" # CLI parsing
 
 [dev-dependencies]
 bencher = "0.1.5" # benchmarks
