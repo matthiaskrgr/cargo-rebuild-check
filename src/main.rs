@@ -2,7 +2,10 @@
 // enable additional rustc warnings
 #![warn(trivial_casts, trivial_numeric_casts, unsafe_code)]
 // enable additional clippy warnings
-#![cfg_attr(feature = "cargo-clippy", warn(clippy, clippy_correctness, clippy_perf, clippy_complexity, clippy_style))]
+#![cfg_attr(
+    feature = "cargo-clippy",
+    warn(clippy, clippy_correctness, clippy_perf, clippy_complexity, clippy_style)
+)]
 //#![cfg_attr(feature = "cargo-clippy", warn(clippy_cargo))]
 #![cfg_attr(feature = "cargo-clippy", warn(clippy_pedantic))]
 #![cfg_attr(feature = "cargo-clippy", warn(shadow_reuse, shadow_same, shadow_unrelated))]
@@ -54,14 +57,11 @@ fn main() {
     let file = read_crates_toml();
     let packages = match get_installed_crate_information(file) {
         Ok(pkgs) => pkgs,
-        Err(error) => match error {
-            errors::ErrorKind::UnknownAPI => {
-                std::process::exit(2);
-            }
-            _ => {
-                eprintln!("bad error: {:?}", error);
-                std::process::exit(3);
-            }
+        Err(error) => if let errors::ErrorKind::UnknownAPI = error {
+            std::process::exit(2);
+        } else {
+            eprintln!("bad error: {:?}", error);
+            std::process::exit(3);
         },
     };
 

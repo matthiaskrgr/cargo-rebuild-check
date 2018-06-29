@@ -16,38 +16,35 @@ struct Output {
 }
 
 impl Output {
-    fn new() -> Output {
-        Output {
+    fn new() -> Self {
+        Self {
             stdout: String::new(),
             stderr: String::new(),
         }
     }
 }
 
-pub fn run_cargo_install<'a>(binary: &'a str, args: &[&str], list_of_failures: &mut Vec<&'a str>) {
+pub fn run_cargo_install<'a>(binary: &'a str, cargo_args: &[&str], list_of_failures: &mut Vec<&'a str>) {
     println!("  Reinstalling {}", binary);
     let mut cargo = Command::new("cargo");
     cargo.arg("install");
     cargo.arg(binary);
     cargo.arg("--force");
-    for argument in args {
+    for argument in cargo_args {
         // don't pass empty argument to cargo as this used to crash it
         if !argument.is_empty() {
             cargo.arg(argument);
         }
     }
 
-    match cargo.status() {
-        Ok(status) => {
-            // bad exit status of cargo, build failed?
-            if !status.success() {
-                list_of_failures.push(binary);
-            }
-        }
-        Err(_) => {
-            // maybe cargo crashed?
+    if let Ok(status) = cargo.status() {
+        // bad exit status of cargo, build failed?
+        if !status.success() {
             list_of_failures.push(binary);
         }
+    } else {
+        // maybe cargo crashed?
+        list_of_failures.push(binary);
     }
 }
 
@@ -195,7 +192,9 @@ pub fn check_and_rebuild_broken_crates(
 
     if rebuilds_required {
         // concat list of names of crates needing rebuilding
-        if !rebuild_all {
+        if rebuild_all {
+            println!("\n  Rebuilding all installed crates as requested.");
+        } else {
             let mut pkgs_string = String::new();
             for pkg in &broken_pkgs {
                 pkgs_string.push_str(&pkg.name);
@@ -203,8 +202,6 @@ pub fn check_and_rebuild_broken_crates(
             }
 
             println!("\n  Crates needing rebuild: {}", pkgs_string.trim());
-        } else {
-            println!("\n  Rebuilding all installed crates as requested.");
         }
     } else {
         println!("\n  Everything looks good! :)");
@@ -218,44 +215,41 @@ pub fn check_and_rebuild_broken_crates(
         for pkg in broken_pkgs {
             // read the line saved in .crates.toml and find out the according "cargo install" flags
             let mut cargo_args: Vec<&str> = Vec::new();
-            match pkg.git {
-                Some(ref git_repo_addr) => {
-                    cargo_args.push("--git");
-                    cargo_args.push(git_repo_addr);
-                    // we have a git package, check if it has branch, tag or rev, else install from repo
+            if let Some(ref git_repo_addr) = pkg.git {
+                cargo_args.push("--git");
+                cargo_args.push(git_repo_addr);
+                // we have a git package, check if it has branch, tag or rev, else install from repo
 
-                    if let Some(ref branch) = pkg.branch {
-                        cargo_args.push("--branch");
-                        cargo_args.push(branch);
+                if let Some(ref branch) = pkg.branch {
+                    cargo_args.push("--branch");
+                    cargo_args.push(branch);
+                }
+                if let Some(ref tag) = pkg.tag {
+                    cargo_args.push("--tag");
+                    cargo_args.push(tag);
+                }
+                if let Some(ref rev) = pkg.rev {
+                    cargo_args.push("--rev");
+                    cargo_args.push(rev);
+                }
+            } else {
+                // normal crates.io package?
+                if let Some(ref registry) = pkg.registry {
+                    if registry == "https://github.com/rust-lang/crates.io-index" {
+                        // crates io, reinstall the same version
+                        cargo_args.push("--version");
+                        cargo_args.push(&pkg.version);
+                    } else {
+                        eprintln!("error unknown registry!");
+                        panic!();
                     }
-                    if let Some(ref tag) = pkg.tag {
-                        cargo_args.push("--tag");
-                        cargo_args.push(tag);
-                    }
-                    if let Some(ref rev) = pkg.rev {
-                        cargo_args.push("--rev");
-                        cargo_args.push(rev);
-                    }
-                } // Some(ref git_repo_addr)
-                None => {
-                    // normal crates.io package?
-                    if let Some(ref registry) = pkg.registry {
-                        if registry == "https://github.com/rust-lang/crates.io-index" {
-                            // crates io, reinstall the same version
-                            cargo_args.push("--version");
-                            cargo_args.push(&pkg.version);
-                        } else {
-                            eprintln!("error unknown registry!");
-                            panic!();
-                        }
-                    } // match pkg.registry
-                      // if we just have a path, there's not much we can do I guess
-                    if let Some(ref path) = pkg.path {
-                        cargo_args.push("--path");
-                        cargo_args.push(path);
-                    } // match pkg.path
-                } // pkg.git == None /// else
-            } // match pkg.git
+                } // match pkg.registry
+                  // if we just have a path, there's not much we can do I guess
+                if let Some(ref path) = pkg.path {
+                    cargo_args.push("--path");
+                    cargo_args.push(path);
+                } // match pkg.path
+            } // if let Some(ref git_repo_addr) = pkg.git
 
             run_cargo_install(&pkg.name, &cargo_args, &mut list_of_failures);
         }
