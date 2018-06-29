@@ -12,7 +12,6 @@
 #![cfg_attr(feature = "cargo-clippy", warn(stutter))]
 #![cfg_attr(feature = "cargo-clippy", warn(needless_borrow))]
 
-
 extern crate cargo;
 #[macro_use]
 extern crate clap;

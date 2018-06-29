@@ -1,17 +1,3 @@
-// enable additional rustc warnings
-#![warn(trivial_casts, trivial_numeric_casts, unsafe_code)]
-// enable additional clippy warnings
-#![cfg_attr(feature = "cargo-clippy", warn(int_plus_one))]
-#![cfg_attr(feature = "cargo-clippy", warn(shadow_reuse, shadow_same, shadow_unrelated))]
-#![cfg_attr(feature = "cargo-clippy", warn(mut_mut))]
-#![cfg_attr(feature = "cargo-clippy", warn(nonminimal_bool))]
-#![cfg_attr(feature = "cargo-clippy", warn(pub_enum_variant_names))]
-#![cfg_attr(feature = "cargo-clippy", warn(range_plus_one))]
-#![cfg_attr(feature = "cargo-clippy", warn(string_add, string_add_assign))]
-#![cfg_attr(feature = "cargo-clippy", warn(stutter))]
-#![cfg_attr(feature = "cargo-clippy", warn(needless_borrow))]
-
-
 extern crate cargo;
 extern crate rayon;
 extern crate test;
@@ -46,7 +32,6 @@ pub fn read_crates_toml() -> Result<String, ErrorKind> {
 
     let mut crates_index = cargo_cfg.home().clone();
     crates_index.push(".crates.toml");
-
     let crates_toml_path = crates_index.into_path_unlocked();
 
     if !crates_toml_path.is_file() {
