@@ -352,7 +352,7 @@ mod tests {
         assert!(parsed.is_ok());
         let parsed = parsed.unwrap();
         assert_eq!(parsed.len(), 1);
-        let pkg = &parsed[0];
+        let pkg = &parsed.first().unwrap();
         assert_eq!(pkg.name, "afl");
         assert_eq!(pkg.version, "0.3.2");
     }
