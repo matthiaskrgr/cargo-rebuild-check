@@ -2,7 +2,9 @@
 // enable additional rustc warnings
 #![warn(trivial_casts, trivial_numeric_casts, unsafe_code)]
 // enable additional clippy warnings
-#![cfg_attr(feature = "cargo-clippy", warn(int_plus_one))]
+#![cfg_attr(feature = "cargo-clippy", warn(clippy, clippy_correctness, clippy_perf, clippy_complexity, clippy_style))]
+//#![cfg_attr(feature = "cargo-clippy", warn(clippy_cargo))]
+#![cfg_attr(feature = "cargo-clippy", warn(clippy_pedantic))]
 #![cfg_attr(feature = "cargo-clippy", warn(shadow_reuse, shadow_same, shadow_unrelated))]
 #![cfg_attr(feature = "cargo-clippy", warn(mut_mut))]
 #![cfg_attr(feature = "cargo-clippy", warn(nonminimal_bool))]
