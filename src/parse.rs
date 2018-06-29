@@ -94,7 +94,7 @@ pub fn decode_line(line: &str) -> self::CrateInfo {
         rev: None,
         registry: None,
         path: None,
-        binaries: vec![],
+        binaries: Vec::new(),
     };
 
     let mut line_split = line.split_whitespace();
