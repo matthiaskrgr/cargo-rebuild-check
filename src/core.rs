@@ -1,6 +1,5 @@
 #[cfg(test)]
 extern crate test;
-
 extern crate rayon;
 
 use std;
@@ -70,7 +69,7 @@ fn check_bin_with_ldd(binary_path: &str, rustc_lib_path: &str) -> String {
         }
         Err(e) => {
             // something went wrong while running ldd
-            eprintln!("Error while running ldd: '{}'", e);
+            eprintln!("Error while running ldd: '{:?}'", e);
             std::process::exit(3);
         }
     }
