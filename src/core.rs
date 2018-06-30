@@ -24,7 +24,11 @@ impl Output {
     }
 }
 
-pub fn run_cargo_install<'a>(binary: &'a str, cargo_args: &[&str], list_of_failures: &mut Vec<&'a str>) {
+pub fn run_cargo_install<'a>(
+    binary: &'a str,
+    cargo_args: &[&str],
+    list_of_failures: &mut Vec<&'a str>,
+) {
     println!("  Reinstalling {}", binary);
     let mut cargo = Command::new("cargo");
     cargo.arg("install");
