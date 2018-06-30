@@ -17,6 +17,12 @@ debug-assertions = true
 overflow-checks = true
 panic = "unwind"
 
+# same as dev
+[profile.test]
+debug = true
+debug-assertions = true
+overflow-checks = true
+
 [profile.release]
 codegen-units = 1
 lto = true
