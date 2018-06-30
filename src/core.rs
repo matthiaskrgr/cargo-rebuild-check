@@ -6,7 +6,7 @@ extern crate rayon;
 use std;
 use std::process::Command;
 
-use self::rayon::iter::*;
+use core::rayon::iter::*;
 
 use check_external_cmds::*;
 use parse::*;
