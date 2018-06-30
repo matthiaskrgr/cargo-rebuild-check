@@ -12,6 +12,12 @@ clap = "2.32" # CLI parsing
 [dev-dependencies]
 bencher = "0.1.5" # benchmarks
 
+[profile.dev]
+debug = true
+debug-assertions = true
+overflow-checks = true
+panic = "unwind"
+
 [profile.release]
 codegen-units = 1
 lto = true
