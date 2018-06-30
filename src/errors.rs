@@ -1,5 +1,5 @@
 #[derive(Debug, PartialEq)]
-pub enum ErrorKind {
+pub(crate) enum ErrorKind {
     NoCargoHome,       // could not find $CARGO_HOME
     NoCratesToml,      // could not find $CARGO_HOME/.crates.toml
     NoReadCratesToml,  // failed to read .crates.toml

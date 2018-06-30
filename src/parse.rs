@@ -9,19 +9,19 @@ use errors::ErrorKind;
 
 // a package that we may need to rebuild
 #[derive(Debug)]
-pub struct CrateInfo {
-    pub name: String,
-    pub version: String,
-    pub git: Option<String>,
-    pub branch: Option<String>,
-    pub tag: Option<String>,
-    pub rev: Option<String>,
-    pub registry: Option<String>,
-    pub path: Option<String>,
-    pub binaries: Vec<String>,
+pub(crate) struct CrateInfo {
+    pub(crate) name: String,
+    pub(crate) version: String,
+    pub(crate) git: Option<String>,
+    pub(crate) branch: Option<String>,
+    pub(crate) tag: Option<String>,
+    pub(crate) rev: Option<String>,
+    pub(crate) registry: Option<String>,
+    pub(crate) path: Option<String>,
+    pub(crate) binaries: Vec<String>,
 }
 
-pub fn read_crates_toml() -> Result<String, ErrorKind> {
+pub(crate) fn read_crates_toml() -> Result<String, ErrorKind> {
     let cargo_cfg = match cargo::util::config::Config::default() {
         Ok(cargo_cfg) => cargo_cfg,
         Err(e) => {
@@ -58,7 +58,7 @@ pub fn read_crates_toml() -> Result<String, ErrorKind> {
     Ok(file_content)
 }
 
-pub fn get_installed_crate_information(
+pub(crate) fn get_installed_crate_information(
     file_content: Result<String, ErrorKind>,
 ) -> Result<Vec<CrateInfo>, ErrorKind> {
     let file = file_content.unwrap();
@@ -84,7 +84,7 @@ pub fn get_installed_crate_information(
     Ok(packages)
 }
 
-pub fn decode_line(line: &str) -> self::CrateInfo {
+pub(crate) fn decode_line(line: &str) -> self::CrateInfo {
     let mut package = CrateInfo {
         name: String::new(),
         version: String::new(),

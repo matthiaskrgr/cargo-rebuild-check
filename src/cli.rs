@@ -1,6 +1,6 @@
 use clap::{App, AppSettings, Arg, ArgMatches, SubCommand};
 
-pub fn gen_clap<'a>() -> ArgMatches<'a> {
+pub(crate) fn gen_clap<'a>() -> ArgMatches<'a> {
     let auto_rebuild = Arg::with_name("auto-rebuild")
         .short("a")
         .long("auto")

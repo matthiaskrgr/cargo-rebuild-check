@@ -15,14 +15,14 @@ fn has_binary(binary: &str) -> bool {
     }
 }
 
-pub fn get_rustc() -> String {
+pub(crate) fn get_rustc() -> String {
     match env::var_os("RUSTC") {
         Some(rustc) => rustc.into_string().unwrap(),
         None => String::from("rustc"),
     }
 }
 
-pub fn all_binaries_available() -> Result<bool, String> {
+pub(crate) fn all_binaries_available() -> Result<bool, String> {
     // we need ldd, rustc and cargo
     let mut missing_bins = String::new();
     if !has_binary("ldd") {

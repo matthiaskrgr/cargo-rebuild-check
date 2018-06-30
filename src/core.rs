@@ -25,7 +25,7 @@ impl Output {
     }
 }
 
-pub fn run_cargo_install<'a>(
+pub(crate) fn run_cargo_install<'a>(
     binary: &'a str,
     cargo_args: &[&str],
     list_of_failures: &mut Vec<&'a str>,
@@ -113,7 +113,7 @@ fn parse_ldd_output<'a>(
     outdated_package
 }
 
-pub fn check_crate<'a>(
+pub(crate) fn check_crate<'a>(
     package: &'a CrateInfo,
     bin_dir: &std::path::PathBuf,
     rustc_lib_path: &str,
@@ -151,7 +151,7 @@ pub fn check_crate<'a>(
     outdated_package
 }
 
-pub fn get_rustc_lib_path() -> String {
+pub(crate) fn get_rustc_lib_path() -> String {
     let rustc = get_rustc();
     let rust_lib_path = match Command::new(&rustc)
         .arg("--print")
@@ -177,7 +177,7 @@ pub fn get_rustc_lib_path() -> String {
         .expect("Failed to convert pathBuf to String")
 }
 
-pub fn check_and_rebuild_broken_crates(
+pub(crate) fn check_and_rebuild_broken_crates(
     packages: &[CrateInfo],
     rust_lib_path: &str,
     bin_dir: &std::path::PathBuf,
