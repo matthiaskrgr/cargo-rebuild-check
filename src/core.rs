@@ -1,6 +1,6 @@
+extern crate rayon;
 #[cfg(test)]
 extern crate test;
-extern crate rayon;
 
 use std;
 use std::process::Command;
@@ -200,13 +200,13 @@ pub(crate) fn check_and_rebuild_broken_crates(
         if rebuild_all {
             println!("\n  Rebuilding all installed crates as requested.");
         } else {
-            let mut pkgs_string = String::new();
-            for pkg in &broken_pkgs {
-                pkgs_string.push_str(&pkg.name);
-                pkgs_string.push_str(" ");
-            }
+            let pkgs_string = &broken_pkgs
+                .iter()
+                .map(|pkg| pkg.name.clone())
+                .collect::<Vec<_>>()
+                .join(" ");
 
-            println!("\n  Crates needing rebuild: {}", pkgs_string.trim());
+            println!("\n  Crates needing rebuild: {}", pkgs_string);
         }
     } else {
         println!("\n  Everything looks good! :)");
