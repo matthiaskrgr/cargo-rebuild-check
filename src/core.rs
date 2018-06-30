@@ -209,6 +209,7 @@ pub(crate) fn check_and_rebuild_broken_crates(
             println!("\n  Crates needing rebuild: {}", pkgs_string);
         }
     } else {
+        // if all crates have working links, no need to do anything else
         println!("\n  Everything looks good! :)");
         std::process::exit(0);
     }
@@ -223,8 +224,8 @@ pub(crate) fn check_and_rebuild_broken_crates(
             if let Some(ref git_repo_addr) = pkg.git {
                 cargo_args.push("--git");
                 cargo_args.push(git_repo_addr);
-                // we have a git package, check if it has branch, tag or rev, else install from repo
 
+                // we have a git package, check if it has branch, tag or rev, else install from repo
                 if let Some(ref branch) = pkg.branch {
                     cargo_args.push("--branch");
                     cargo_args.push(branch);
@@ -249,7 +250,7 @@ pub(crate) fn check_and_rebuild_broken_crates(
                         panic!();
                     }
                 } // match pkg.registry
-                  // if we just have a path, there's not much we can do I guess
+                  // if we just have a path, there's not much we can do, I guess...
                 if let Some(ref path) = pkg.path {
                     cargo_args.push("--path");
                     cargo_args.push(path);
