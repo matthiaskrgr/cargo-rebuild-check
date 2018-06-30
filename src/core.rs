@@ -132,9 +132,11 @@ pub(crate) fn check_crate<'a>(
             // rebuild unconditionally
             outdated_package = Some(package);
         } else {
+            // fuse together the path to the binary we are going to check and get its String
             let mut bin_path: std::path::PathBuf = bin_dir.clone();
             bin_path.push(&binary);
             let binary_path = bin_path.into_os_string().into_string().unwrap();
+            // run ldd on it and check ldds output
             let ldd_result = check_bin_with_ldd(&binary_path, rustc_lib_path);
             outdated_package = parse_ldd_output(&mut output_string, &ldd_result, binary, package);
         }
@@ -186,10 +188,9 @@ pub(crate) fn check_and_rebuild_broken_crates(
     // iterate (in parallel) over the acquired metadata and check for broken library links
     // filter out all None values, only collect the Some() ones
 
-    #[allow(non_snake_case)]
     let broken_pkgs: Vec<&CrateInfo> = packages
         .par_iter()
-        .filter_map(|Crate| check_crate(Crate, bin_dir, rust_lib_path, rebuild_all))
+        .filter_map(|crate_data| check_crate(crate_data, bin_dir, rust_lib_path, rebuild_all))
         .collect();
 
     let rebuilds_required: bool = !broken_pkgs.is_empty();
