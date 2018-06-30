@@ -1,5 +1,3 @@
-extern crate test;
-
 use clap::{App, AppSettings, Arg, ArgMatches, SubCommand};
 
 pub fn gen_clap<'a>() -> ArgMatches<'a> {

@@ -1,6 +1,7 @@
-extern crate cargo;
-extern crate rayon;
+#[cfg(test)]
 extern crate test;
+
+extern crate rayon;
 
 use std;
 use std::process::Command;

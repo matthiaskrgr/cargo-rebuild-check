@@ -1,5 +1,5 @@
 extern crate cargo;
-extern crate rayon;
+#[cfg(test)]
 extern crate test;
 
 use std::fs::File;

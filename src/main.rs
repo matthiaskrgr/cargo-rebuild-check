@@ -1,6 +1,4 @@
 #![feature(test)]
-// enable additional rustc warnings
-
 // these [allow()] by default, make them warn:
 #![warn(
     ellipsis_inclusive_range_patterns, single_use_lifetimes, trivial_casts, trivial_numeric_casts,
