@@ -4,7 +4,6 @@ use std::string::String;
 
 fn has_binary(binary: &str) -> bool {
     // check if we can find the binary
-    // @TODO can we assert that we don't get any output in stdout/stderr from this function?
     Command::new(&binary)
         .env("LANG", "en_US")
         .env("LC_ALL", "en_US")
