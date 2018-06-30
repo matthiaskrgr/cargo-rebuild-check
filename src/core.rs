@@ -90,12 +90,12 @@ fn parse_ldd_output<'a>(
     // we need to know if this is the first missing lib of a binary when making our output string
     let output = ldd_result;
 
-    let mut first = true;
+    let mut first_broken_link = true;
     for line in output.lines() {
         // is binary missing a library?
         if line.ends_with("=> not found") {
-            if first {
-                // we found a broken link, assume package is outdated
+            if first_broken_link {
+                // we found a broken library link, assume package is outdated
                 outdated_package = Some(package);
                 output_string
                     .stderr
@@ -105,7 +105,7 @@ fn parse_ldd_output<'a>(
                 "\t\t{}\n",
                 line.replace("=> not found", "").trim()
             ));
-            first = false;
+            first_broken_link = false;
         } // not found
     } // for line in output.lines()
 
