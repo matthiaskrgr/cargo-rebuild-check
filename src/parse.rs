@@ -63,24 +63,16 @@ pub(crate) fn get_installed_crate_information(
 ) -> Result<Vec<CrateInfo>, ErrorKind> {
     let file = file_content.unwrap();
 
-    let mut file_iter = file.lines().into_iter();
+    let mut file_lines = file.lines();
     // skip the first line when unwrapping
     // the first line also tells the api version, so assert that we are sort of compatible
-    let first_line = file_iter.next().unwrap().trim();
+    let first_line = file_lines.next().unwrap().trim();
     if first_line != "[v1]" {
         eprintln!("Error: API changed!");
         return Err(ErrorKind::UnknownAPI);
     }
 
-    let mut packages = Vec::new();
-
-    for line in file_iter {
-        let package = decode_line(line);
-        // collect the packages
-        packages.push(package);
-    } // for line in file_iter
-      // done reading in the file
-
+    let packages = file_lines.map(|line| decode_line(line)).collect::<Vec<CrateInfo>>();
     Ok(packages)
 }
 
