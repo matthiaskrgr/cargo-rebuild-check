@@ -72,7 +72,9 @@ pub(crate) fn get_installed_crate_information(
         return Err(ErrorKind::UnknownAPI);
     }
 
-    let packages = file_lines.map(|line| decode_line(line)).collect::<Vec<CrateInfo>>();
+    let packages = file_lines
+        .map(|line| decode_line(line))
+        .collect::<Vec<CrateInfo>>();
     Ok(packages)
 }
 
@@ -173,16 +175,17 @@ pub(crate) fn decode_line(line: &str) -> self::CrateInfo {
     // split at the "=" and get everything after it
     let bins_split_from_line = line.split('=');
     let bins = bins_split_from_line.last().unwrap();
-    for bin in bins.split(',') {
-        // clean up, remove characters remaining from toml encoding
-        let binary: String = bin
-            .replace("[", "")
-            .replace("]", "")
-            .replace("\"", "")
-            .trim()
-            .to_string();
-        package.binaries.push(binary);
-    }
+    // clean up, remove characters remaining from toml encoding
+    bins.split(',').for_each(|bin| {
+        package.binaries.push(
+            bin.replace("[", "")
+                .replace("]", "")
+                .replace("\"", "")
+                .trim()
+                .to_string(),
+        )
+    });
+
     package
 }
 
