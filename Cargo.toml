@@ -1,7 +1,10 @@
+cargo-features = ["edition"]
+
 [package]
 name = "cargo-rebuild-check"
 version = "0.1.0"
 authors = ["Matthias Krüger <matthias.krueger@famsik.de>"]
+edition = '2018'
 
 [dependencies]
 cargo = "0.28" # get CARGO_HOME

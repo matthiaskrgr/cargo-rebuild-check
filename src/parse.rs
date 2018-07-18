@@ -1,11 +1,10 @@
-extern crate cargo;
 #[cfg(test)]
-extern crate test;
+use test::*;
 
 use std::fs::File;
 use std::io::prelude::*;
 
-use errors::ErrorKind;
+use crate::errors::*;
 
 // a package that we may need to rebuild
 #[derive(Debug)]
