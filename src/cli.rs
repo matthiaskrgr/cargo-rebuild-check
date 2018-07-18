@@ -1,4 +1,4 @@
-use clap::{App, AppSettings, Arg, ArgMatches, SubCommand};
+use clap::{App, AppSettings, Arg, ArgMatches, SubCommand, crate_version};
 
 pub(crate) fn gen_clap<'a>() -> ArgMatches<'a> {
     let auto_rebuild = Arg::with_name("auto-rebuild")

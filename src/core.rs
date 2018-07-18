@@ -1,14 +1,12 @@
-extern crate rayon;
 #[cfg(test)]
-extern crate test;
+use test::*;
 
-use std;
 use std::process::Command;
 
-use core::rayon::iter::*;
+use rayon::iter::*;
 
-use check_external_cmds::*;
-use parse::*;
+use crate::check_external_cmds::*;
+use crate::parse::*;
 
 struct Output {
     stdout: String,
