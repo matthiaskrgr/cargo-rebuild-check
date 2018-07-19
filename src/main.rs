@@ -36,7 +36,6 @@
 )]
 #![cfg_attr(feature = "cargo-clippy", warn(needless_borrow))]
 
-
 mod check_external_cmds;
 mod cli;
 mod core;
