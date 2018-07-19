@@ -45,7 +45,6 @@ pub(crate) fn all_binaries_available() -> Result<bool, String> {
 
 #[cfg(test)]
 mod tests {
-    use std;
     use std::process::Command;
     #[test]
     fn no_binary_found() {
