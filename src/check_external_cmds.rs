@@ -45,21 +45,11 @@ pub(crate) fn all_binaries_available() -> Result<bool, String> {
 
 #[cfg(test)]
 mod tests {
+    use crate::test_helpers::*;
     use std::process::Command;
     #[test]
     fn no_binary_found() {
-        // do this similar to test_help
-        // run a "cargo build", execute the binary with the PATH env var cleared
-        // to prevent finding any binaries
-        // then assert that we get a warning as output
-        let mut dir = std::env::current_dir().unwrap();
-        let cargo_cmd = Command::new("cargo")
-            .arg("build")
-            .current_dir(&dir)
-            .output();
-        // cargo build is ok
-        assert!(cargo_cmd.unwrap().status.success());
-
+        let mut dir = run_cargo_build();
         dir.push("target");
         dir.push("debug");
         let crc_cmd = Command::new("cargo-rebuild-check")

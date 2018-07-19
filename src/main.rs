@@ -41,6 +41,8 @@ mod cli;
 mod core;
 mod errors;
 mod parse;
+#[cfg(test)]
+mod test_helpers;
 
 use crate::check_external_cmds::*;
 use crate::cli::*;

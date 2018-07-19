@@ -34,20 +34,11 @@ pub(crate) fn gen_clap<'a>() -> ArgMatches<'a> {
 #[cfg(test)]
 mod tests {
     use std::process::Command;
+    use crate::test_helpers::*;
+
     #[test]
     fn test_help() {
-        // this is a hack
-        // we launch "cargo build", build the crate and when running the executable
-        // make sure we get the desired output
-        let mut dir = std::env::current_dir().unwrap();
-        //println!("dir: {:?}", );
-        let cargo_cmd = Command::new("cargo")
-            .arg("build")
-            .current_dir(&dir)
-            .output();
-        // cargo build is ok
-        assert!(cargo_cmd.unwrap().status.success());
-
+        let mut dir = run_cargo_build();
         dir.push("target");
         dir.push("debug");
         let crc_cmd = Command::new("./cargo-rebuild-check")
