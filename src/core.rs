@@ -212,7 +212,7 @@ pub(crate) fn check_and_rebuild_broken_crates(
         std::process::exit(0);
     }
 
-    let mut list_of_failures: Vec<&str> = Vec::new();
+    let mut list_of_failures: Vec<&str> = Vec::with_capacity(broken_pkgs.len());
     // try to rebuild broken packages
     if rebuilds_required && (do_auto_rebuild || rebuild_all) {
         // we need to find out if a package is a git package
