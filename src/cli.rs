@@ -33,8 +33,8 @@ pub(crate) fn gen_clap<'a>() -> ArgMatches<'a> {
 
 #[cfg(test)]
 mod tests {
-    use std::process::Command;
     use crate::test_helpers::*;
+    use std::process::Command;
 
     #[test]
     fn test_help() {

@@ -8,7 +8,8 @@
     trivial_numeric_casts,
     unreachable_pub,
     unsafe_code,
-    unused
+    unused,
+    rust_2018_idioms
 )]
 // enable additional clippy warnings
 #![cfg_attr(

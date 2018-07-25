@@ -1,5 +1,5 @@
-use std::process::Command;
 use std::path::PathBuf;
+use std::process::Command;
 
 pub(crate) fn run_cargo_build() -> PathBuf {
     // run a "cargo build, then we can run the resulting binary and test things
