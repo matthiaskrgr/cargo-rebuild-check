@@ -110,7 +110,7 @@ pub(crate) fn decode_line(line: &str) -> self::CrateInfo {
         Some("git") => {
             // cargo-rebuild-check v0.1.0 (https://github.com/matthiaskrgr/cargo-rebuild-check#2ce1ed0b):
             let mut split = addr.split('#');
-            let mut repo = split.next().unwrap();
+            let repo = split.next().unwrap();
             // rev does not matter unless we have "?rev="
             // cargo-update v1.4.1 (https://github.com/nabijaczleweli/cargo-update/?rev=ab82e070aaf4755fc38d15ca7d58acf4b697731d#ab82e070):
 
